@@ -44,13 +44,15 @@ docker-logs:
 docker-watch:
 	@echo "Down all Docker containers..."
 	@make docker-down
+	@sleep 3
+	@echo "Building the application..."
+	@make build-app
+	@sleep 3
+	@echo "All systems ready! Run 'make run' in another terminal to start the app"
 	@echo "Starting Docker containers..."
 	@make docker-up
 	@echo "Waiting for database to be ready..."
 	@sleep 3
-	@echo "Building the application..."
-	@make build-app
-	@echo "All systems ready! Run 'make run' in another terminal to start the app"
 	@echo "Watching the containers. Press Ctrl+C to stop."
 	@make docker-logs
 

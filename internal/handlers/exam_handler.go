@@ -21,22 +21,23 @@ func NewExamHandler(svc *service.ExamService) *ExamHandler {
 }
 
 func (h *ExamHandler) GenerateExam(w http.ResponseWriter, r *http.Request) {
+	slog.InfoContext(r.Context(), "--------------------------------------------------------------------------------")
 	slog.InfoContext(r.Context(), "Generating exam - request received")
+	slog.InfoContext(r.Context(), "--------------------------------------------------------------------------------")
 
 	var body struct {
 		Subjects []struct {
-			Name          string `json:"name"`
-			QuestionCount int32  `json:"question_count"`
+			Name          string   `json:"name"`
+			QuestionCount int32    `json:"question_count"`
+			Topics        []string `json:"topics,omitempty"`
 		} `json:"subjects"`
-		Topics        *[]string `json:"topics"`
-		Institution   *string   `json:"institution"`
-		Position      *string   `json:"position"`
-		Level         *string   `json:"level"`
-		Difficulty    *string   `json:"difficulty"`
-		Modality      *string   `json:"modality"`
-		PracticeArea  *string   `json:"practice_area"`
-		FieldOfStudy  *string   `json:"field_of_study"`
-		QuestionCount int32     `json:"question_count"`
+		Difficulty   *string `json:"difficulty"`
+		Level        *string `json:"level"`
+		Modality     *string `json:"modality"`
+		Position     *string `json:"position"`
+		FieldOfStudy *string `json:"field_of_study"`
+		MinYear      *int32  `json:"min_year"`
+		MaxYear      *int32  `json:"max_year"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -47,31 +48,31 @@ func (h *ExamHandler) GenerateExam(w http.ResponseWriter, r *http.Request) {
 
 	slog.InfoContext(r.Context(), "Request body decoded successfully",
 		"subjects_count", len(body.Subjects),
-		"question_count", body.QuestionCount,
 		"difficulty", body.Difficulty,
 		"modality", body.Modality,
 		"field_of_study", body.FieldOfStudy,
 	)
 
-	// Convert body subjects to service SubjectInfo
-	subjects := make([]service.SubjectInfo, len(body.Subjects))
+	// Convert body subjects to service SubjectFilter
+	subjects := make([]service.SubjectFilter, len(body.Subjects))
 	for i, s := range body.Subjects {
-		subjects[i] = service.SubjectInfo{
+		subjects[i] = service.SubjectFilter{
 			Name:          s.Name,
 			QuestionCount: s.QuestionCount,
+			Topics:        s.Topics,
 		}
-		slog.InfoContext(r.Context(), "Subject parsed", "index", i, "name", s.Name, "question_count", s.QuestionCount)
+		slog.InfoContext(r.Context(), "Subject parsed", "index", i, "name", s.Name, "question_count", s.QuestionCount, "topics", s.Topics)
 	}
 
 	filters := service.GenerateExamFilters{
-		Subjects:      subjects,
-		Topics:        body.Topics,
-		Difficulty:    stringToPgText(body.Difficulty),
-		Modality:      derefString(body.Modality),
-		PracticeArea:  derefString(body.PracticeArea),
-		FieldOfStudy:  derefString(body.FieldOfStudy),
-		Level:         stringToPgTextPtr(body.Level),
-		QuestionCount: body.QuestionCount,
+		Subjects:     subjects,
+		Difficulty:   stringToPgText(body.Difficulty),
+		Level:        stringToPgText(body.Level),
+		Modality:     stringToPgText(body.Modality),
+		Position:     stringToPgText(body.Position),
+		FieldOfStudy: stringToPgText(body.FieldOfStudy),
+		MinYear:      int32ToPgInt4(body.MinYear),
+		MaxYear:      int32ToPgInt4(body.MaxYear),
 	}
 
 	slog.InfoContext(r.Context(), "Filters created, calling service to generate exam")
@@ -103,16 +104,9 @@ func stringToPgText(s *string) pgtype.Text {
 	return pgtype.Text{String: *s, Valid: true}
 }
 
-func stringToPgTextPtr(s *string) *pgtype.Text {
-	if s == nil || *s == "" {
-		return nil
+func int32ToPgInt4(i *int32) pgtype.Int4 {
+	if i == nil {
+		return pgtype.Int4{Valid: false}
 	}
-	return &pgtype.Text{String: *s, Valid: true}
-}
-
-func derefString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
+	return pgtype.Int4{Int32: *i, Valid: true}
 }

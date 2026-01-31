@@ -156,14 +156,22 @@ WHERE
     AND ($3::text IS NULL OR q.position = $3)
     AND ($4::text IS NULL OR q.level = $4)
     AND ($5::text IS NULL OR q.difficulty = $5)
+    AND ($6::text IS NULL OR q.modality = $6)
+    AND ($7::text IS NULL OR q.field_of_study = $7)
+    AND ($8::int IS NULL OR q.year >= $8)
+    AND ($9::int IS NULL OR q.year <= $9)
 `
 
 type CountQuestionsForExamParams struct {
-	ID         pgtype.UUID `json:"id"`
-	TopicID    pgtype.UUID `json:"topic_id"`
-	Position   pgtype.Text `json:"position"`
-	Level      pgtype.Text `json:"level"`
-	Difficulty pgtype.Text `json:"difficulty"`
+	ID           pgtype.UUID `json:"id"`
+	TopicID      pgtype.UUID `json:"topic_id"`
+	Position     pgtype.Text `json:"position"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
+	MinYear      pgtype.Int4 `json:"min_year"`
+	MaxYear      pgtype.Int4 `json:"max_year"`
 }
 
 func (q *Queries) CountQuestionsForExam(ctx context.Context, arg CountQuestionsForExamParams) (int64, error) {
@@ -173,6 +181,10 @@ func (q *Queries) CountQuestionsForExam(ctx context.Context, arg CountQuestionsF
 		arg.Position,
 		arg.Level,
 		arg.Difficulty,
+		arg.Modality,
+		arg.FieldOfStudy,
+		arg.MinYear,
+		arg.MaxYear,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -281,7 +293,7 @@ func (q *Queries) GetQuestion(ctx context.Context, id pgtype.UUID) (Question, er
 const getQuestionsForExam = `-- name: GetQuestionsForExam :many
 SELECT 
     q.id, q.statement, q.year, q.position, q.level,
-    q.difficulty, q.modality, q.practice_area, q.field_of_study,
+    q.difficulty, q.modality, q.field_of_study,
     t.name as topic_name, s.name as subject_name
 FROM questions q
 JOIN topics t ON q.topic_id = t.id
@@ -292,17 +304,25 @@ WHERE
     AND ($4::text IS NULL OR q.position = $4)
     AND ($5::text IS NULL OR q.level = $5)
     AND ($6::text IS NULL OR q.difficulty = $6)
+    AND ($7::text IS NULL OR q.modality = $7)
+    AND ($8::text IS NULL OR q.field_of_study = $8)
+    AND ($9::int IS NULL OR q.year >= $9)
+    AND ($10::int IS NULL OR q.year <= $10)
 ORDER BY RANDOM()
 LIMIT $2
 `
 
 type GetQuestionsForExamParams struct {
-	ID         pgtype.UUID `json:"id"`
-	Limit      int32       `json:"limit"`
-	TopicID    pgtype.UUID `json:"topic_id"`
-	Position   pgtype.Text `json:"position"`
-	Level      pgtype.Text `json:"level"`
-	Difficulty pgtype.Text `json:"difficulty"`
+	ID           pgtype.UUID `json:"id"`
+	Limit        int32       `json:"limit"`
+	TopicID      pgtype.UUID `json:"topic_id"`
+	Position     pgtype.Text `json:"position"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
+	MinYear      pgtype.Int4 `json:"min_year"`
+	MaxYear      pgtype.Int4 `json:"max_year"`
 }
 
 type GetQuestionsForExamRow struct {
@@ -313,7 +333,6 @@ type GetQuestionsForExamRow struct {
 	Level        pgtype.Text `json:"level"`
 	Difficulty   pgtype.Text `json:"difficulty"`
 	Modality     pgtype.Text `json:"modality"`
-	PracticeArea pgtype.Text `json:"practice_area"`
 	FieldOfStudy pgtype.Text `json:"field_of_study"`
 	TopicName    string      `json:"topic_name"`
 	SubjectName  string      `json:"subject_name"`
@@ -327,6 +346,10 @@ func (q *Queries) GetQuestionsForExam(ctx context.Context, arg GetQuestionsForEx
 		arg.Position,
 		arg.Level,
 		arg.Difficulty,
+		arg.Modality,
+		arg.FieldOfStudy,
+		arg.MinYear,
+		arg.MaxYear,
 	)
 	if err != nil {
 		return nil, err
@@ -343,7 +366,6 @@ func (q *Queries) GetQuestionsForExam(ctx context.Context, arg GetQuestionsForEx
 			&i.Level,
 			&i.Difficulty,
 			&i.Modality,
-			&i.PracticeArea,
 			&i.FieldOfStudy,
 			&i.TopicName,
 			&i.SubjectName,
@@ -834,7 +856,12 @@ func (q *Queries) ListQuestionsByYearAndLevel(ctx context.Context, arg ListQuest
 }
 
 const questionExistsByStatement = `-- name: QuestionExistsByStatement :one
-SELECT EXISTS(SELECT 1 FROM questions WHERE statement = $1) AS exists
+SELECT EXISTS (
+        SELECT 1
+        FROM questions
+        WHERE
+            statement = $1
+    ) AS exists
 `
 
 func (q *Queries) QuestionExistsByStatement(ctx context.Context, statement string) (bool, error) {

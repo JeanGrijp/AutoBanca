@@ -174,7 +174,7 @@ ORDER BY q.created_at DESC;
 -- name: GetQuestionsForExam :many
 SELECT 
     q.id, q.statement, q.year, q.position, q.level,
-    q.difficulty, q.modality, q.practice_area, q.field_of_study,
+    q.difficulty, q.modality, q.field_of_study,
     t.name as topic_name, s.name as subject_name
 FROM questions q
 JOIN topics t ON q.topic_id = t.id
@@ -185,6 +185,10 @@ WHERE
     AND (sqlc.narg('position')::text IS NULL OR q.position = sqlc.narg('position'))
     AND (sqlc.narg('level')::text IS NULL OR q.level = sqlc.narg('level'))
     AND (sqlc.narg('difficulty')::text IS NULL OR q.difficulty = sqlc.narg('difficulty'))
+    AND (sqlc.narg('modality')::text IS NULL OR q.modality = sqlc.narg('modality'))
+    AND (sqlc.narg('field_of_study')::text IS NULL OR q.field_of_study = sqlc.narg('field_of_study'))
+    AND (sqlc.narg('min_year')::int IS NULL OR q.year >= sqlc.narg('min_year'))
+    AND (sqlc.narg('max_year')::int IS NULL OR q.year <= sqlc.narg('max_year'))
 ORDER BY RANDOM()
 LIMIT $2;
 
@@ -198,4 +202,8 @@ WHERE
     AND (sqlc.narg('topic_id')::uuid IS NULL OR q.topic_id = sqlc.narg('topic_id'))
     AND (sqlc.narg('position')::text IS NULL OR q.position = sqlc.narg('position'))
     AND (sqlc.narg('level')::text IS NULL OR q.level = sqlc.narg('level'))
-    AND (sqlc.narg('difficulty')::text IS NULL OR q.difficulty = sqlc.narg('difficulty'));
+    AND (sqlc.narg('difficulty')::text IS NULL OR q.difficulty = sqlc.narg('difficulty'))
+    AND (sqlc.narg('modality')::text IS NULL OR q.modality = sqlc.narg('modality'))
+    AND (sqlc.narg('field_of_study')::text IS NULL OR q.field_of_study = sqlc.narg('field_of_study'))
+    AND (sqlc.narg('min_year')::int IS NULL OR q.year >= sqlc.narg('min_year'))
+    AND (sqlc.narg('max_year')::int IS NULL OR q.year <= sqlc.narg('max_year'));
