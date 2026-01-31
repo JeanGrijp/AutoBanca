@@ -9,7 +9,7 @@ import (
 )
 
 type QuestionService struct {
-	svc db.Queries
+	svc db.Querier
 }
 
 type QuestionFilter struct {
@@ -23,7 +23,7 @@ type QuestionFilter struct {
 	AreaFormacao *pgtype.Text
 }
 
-func NewQuestionService(svc db.Queries) *QuestionService {
+func NewQuestionService(svc db.Querier) *QuestionService {
 	return &QuestionService{svc: svc}
 }
 

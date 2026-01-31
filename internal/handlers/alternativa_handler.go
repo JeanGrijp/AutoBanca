@@ -91,13 +91,13 @@ func (h *AlternativaHandler) GetAlternativa(w http.ResponseWriter, r *http.Reque
 	idUUID := pgtype.UUID{}
 	if err := idUUID.Scan(id); err != nil {
 		slog.ErrorContext(r.Context(), "Error scanning UUID", "error", err)
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		http.Error(w, "invalid ID format", http.StatusBadRequest)
 		return
 	}
 	alternativa, err := h.svc.GetAlternativa(r.Context(), idUUID)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Error getting alternativa", "error", err)
-		http.Error(w, "Alternativa not found or invalid ID", http.StatusNotFound)
+		http.Error(w, "alternativa not found or invalid ID", http.StatusNotFound)
 		return
 	}
 

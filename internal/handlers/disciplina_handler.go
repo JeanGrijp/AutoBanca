@@ -57,7 +57,7 @@ func (h *DisciplinaHandler) GetDisciplina(w http.ResponseWriter, r *http.Request
 	id := chi.URLParam(r, "id")
 	disciplina, err := h.svc.GetDisciplina(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Disciplina not found or invalid ID", http.StatusNotFound)
+		http.Error(w, "disciplina not found or invalid ID", http.StatusNotFound)
 		return
 	}
 

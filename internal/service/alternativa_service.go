@@ -9,10 +9,10 @@ import (
 )
 
 type AlternativaService struct {
-	q db.Queries
+	q db.Querier
 }
 
-func NewAlternativaService(q db.Queries) *AlternativaService {
+func NewAlternativaService(q db.Querier) *AlternativaService {
 	return &AlternativaService{q: q}
 }
 

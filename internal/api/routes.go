@@ -1,6 +1,13 @@
+// Copyright 2024 Jean Grijp. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
+// Package api sets up the HTTP routes for the AutoBanca application.
 package api
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -56,11 +63,13 @@ func NewRouter(handlers *RouterHandlers) http.Handler {
 	})
 
 	r.Route("/provas", func(r chi.Router) {
-		r.Get("/", handlers.ProvaHandler.ListProvas)
-		r.Post("/", handlers.ProvaHandler.CreateProva)
-		r.Get("/{id}", handlers.ProvaHandler.GetProva)
-		r.Put("/{id}", handlers.ProvaHandler.UpdateProva)
-		r.Delete("/{id}", handlers.ProvaHandler.DeleteProva)
+		r.Post("/", handlers.ProvaHandler.GenerateProva)
+	})
+
+	// slog all routes with a for loop
+	_ = chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		slog.InfoContext(context.Background(), "Route configured", "method", method, "route", route)
+		return nil
 	})
 
 	return r
