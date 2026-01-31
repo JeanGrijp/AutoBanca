@@ -1,0 +1,67 @@
+package api
+
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/JeanGrijp/AutoBanca/internal/handlers"
+)
+
+type RouterHandlers struct {
+	DisciplinaHandler  *handlers.DisciplinaHandler
+	AssuntoHandler     *handlers.AssuntoHandler
+	AlternativaHandler *handlers.AlternativaHandler
+	QuestionHandler    *handlers.QuestionHandler
+	ProvaHandler       *handlers.ProvaHandler
+}
+
+func NewRouter(handlers *RouterHandlers) http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Route("/disciplinas", func(r chi.Router) {
+		r.Get("/", handlers.DisciplinaHandler.ListDisciplinas)
+		r.Post("/", handlers.DisciplinaHandler.CreateDisciplina)
+		r.Get("/{id}", handlers.DisciplinaHandler.GetDisciplina)
+		r.Put("/{id}", handlers.DisciplinaHandler.UpdateDisciplina)
+		r.Delete("/{id}", handlers.DisciplinaHandler.DeleteDisciplina)
+	})
+
+	r.Route("/assuntos", func(r chi.Router) {
+		r.Get("/", handlers.AssuntoHandler.ListAssuntos)
+		r.Post("/", handlers.AssuntoHandler.CreateAssunto)
+		r.Get("/{id}", handlers.AssuntoHandler.GetAssunto)
+		r.Put("/{id}", handlers.AssuntoHandler.UpdateAssunto)
+		r.Delete("/{id}", handlers.AssuntoHandler.DeleteAssunto)
+		r.Get("/disciplina/{disciplina_id}", handlers.AssuntoHandler.ListAssuntosByDisciplina)
+	})
+
+	r.Route("/alternativas", func(r chi.Router) {
+		r.Get("/", handlers.AlternativaHandler.ListAlternativasByQuestion)
+		r.Post("/", handlers.AlternativaHandler.CreateAlternativa)
+		r.Get("/{id}", handlers.AlternativaHandler.GetAlternativa)
+		r.Put("/{id}", handlers.AlternativaHandler.UpdateAlternativa)
+		r.Delete("/{id}", handlers.AlternativaHandler.DeleteAlternativa)
+	})
+
+	r.Route("/questions", func(r chi.Router) {
+		r.Get("/", handlers.QuestionHandler.ListQuestionsByFilters)
+		r.Post("/", handlers.QuestionHandler.CreateQuestion)
+		r.Get("/{id}", handlers.QuestionHandler.GetQuestion)
+		r.Put("/{id}", handlers.QuestionHandler.UpdateQuestion)
+		r.Delete("/{id}", handlers.QuestionHandler.DeleteQuestion)
+	})
+
+	r.Route("/provas", func(r chi.Router) {
+		r.Get("/", handlers.ProvaHandler.ListProvas)
+		r.Post("/", handlers.ProvaHandler.CreateProva)
+		r.Get("/{id}", handlers.ProvaHandler.GetProva)
+		r.Put("/{id}", handlers.ProvaHandler.UpdateProva)
+		r.Delete("/{id}", handlers.ProvaHandler.DeleteProva)
+	})
+
+	return r
+}

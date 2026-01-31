@@ -1,0 +1,23 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    # O `sqlc` usará os arquivos abaixo, relativos a este yaml.
+    # Notei que os nomes são "scheama" e "scheame.sql".
+    # É comum usar "schema" e "schema.sql" ou "queries.sql".
+    # Mantive os nomes atuais, mas considere renomeá-los.
+    queries: "queries"
+    schema: "schema"
+    gen:
+      go:
+        # O pacote Go gerado.
+        package: "db"
+        # O diretório de saída para o código gerado.
+        out: "db"
+        # A biblioteca que você usará para se conectar ao banco de dados.
+        # pgx/v5 é uma escolha moderna e popular.
+        sql_package: "pgx/v5"
+        # Opções úteis para a geração de código.
+        emit_json_tags: true
+        emit_interface: true
+        emit_exact_table_names: false
+        emit_empty_slices: true

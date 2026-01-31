@@ -1,0 +1,45 @@
+services:
+  autobanca_db:
+    image: postgres:alpine3.23
+    container_name: autobanca_db
+    environment:
+      - POSTGRES_USER=autobanca_user
+      - POSTGRES_PASSWORD=autobanca_pass
+      - POSTGRES_DB=autobanca_db
+    ports:
+      - "5432:5432"
+    networks:
+      - autobanca_network
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # Load schema at first run
+      - ./internal/adapter/database/sqlc/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: always
+
+  autobanca_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autobanca_app
+    depends_on:
+      - autobanca_db
+    networks:
+      - autobanca_network
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=autobanca_db
+      - DB_PORT=5432
+      - DB_USER=autobanca_user
+      - DB_PASSWORD=autobanca_pass
+      - DB_NAME=autobanca_db
+      - APP_ENV=development
+    restart: always
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  autobanca_network:
+    driver: bridge
