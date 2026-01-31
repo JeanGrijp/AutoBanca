@@ -1,0 +1,15 @@
+meta {
+  name: Get (ID in Body)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/questions/{{question_id}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

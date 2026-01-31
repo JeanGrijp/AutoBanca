@@ -57,6 +57,7 @@ func NewRouter(handlers *RouterHandlers) http.Handler {
 	r.Route("/questions", func(r chi.Router) {
 		r.Get("/", handlers.QuestionHandler.ListQuestionsByFilters)
 		r.Post("/", handlers.QuestionHandler.CreateQuestion)
+		r.Post("/import", handlers.QuestionHandler.ImportQuestionsCSV)
 		r.Get("/{id}", handlers.QuestionHandler.GetQuestion)
 		r.Put("/{id}", handlers.QuestionHandler.UpdateQuestion)
 		r.Delete("/{id}", handlers.QuestionHandler.DeleteQuestion)

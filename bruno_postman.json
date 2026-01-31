@@ -1,0 +1,40 @@
+{
+	"info": {
+		"name": "AutoBanca",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Disciplinas",
+			"item": [
+				{ "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/disciplinas" } },
+				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/disciplinas", "body": { "mode": "json", "raw": "{\"nome\": \"Direito Constitucional\"}" } } },
+				{ "name": "Get by ID", "request": { "method": "GET", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}" } },
+				{ "name": "Update", "request": { "method": "PUT", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}", "body": { "mode": "json", "raw": "{\"nome\": \"Direito Administrativo\"}" } } },
+				{ "name": "Delete", "request": { "method": "DELETE", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}" } }
+			]
+		},
+		{
+			"name": "Assuntos",
+			"item": [
+				{ "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos" } },
+				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/assuntos", "body": { "mode": "json", "raw": "{\"nome\": \"Atos Administrativos\", \"disciplina_id\": \"{{disciplina_id}}\"}" } } },
+				{ "name": "List by Disciplina", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos/disciplina/{{disciplina_id}}" } }
+			]
+		},
+		{
+			"name": "Questions",
+			"item": [
+				{ "name": "List (Filters in Body)", "request": { "method": "GET", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "raw": "{\"instituicao\": \"FGV\"}" } } },
+				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "raw": "{\n  \"enunciado\": \"Questão exemplo\",\n  \"ano\": 2024,\n  \"assunto_id\": \"{{assunto_id}}\",\n  \"instituicao\": \"STF\",\n  \"cargo\": \"Juiz\",\n  \"nivel\": \"Superior\"\n}" } } },
+				{ "name": "Get (ID in Body)", "request": { "method": "GET", "url": "{{baseUrl}}/questions/{{question_id}}", "body": { "mode": "json", "raw": "{\"id\": \"{{question_id}}\"}" } } }
+			]
+		},
+		{
+			"name": "Provas",
+			"item": [
+				{ "name": "Generate PDF", "request": { "method": "POST", "url": "{{baseUrl}}/provas", "body": { "mode": "json", "raw": "{\"assunto_id\": \"{{assunto_id}}\", \"cargo\": \"Analista\"}" } } }
+			]
+		}
+	]
+}

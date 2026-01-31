@@ -1,0 +1,15 @@
+meta {
+  name: List by Disciplina
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/assuntos/disciplina/{{disciplina_id}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

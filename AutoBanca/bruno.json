@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "AutoBanca",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

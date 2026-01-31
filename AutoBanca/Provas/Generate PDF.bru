@@ -1,0 +1,15 @@
+meta {
+  name: Generate PDF
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/provas
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

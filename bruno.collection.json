@@ -1,0 +1,39 @@
+{
+  "name": "AutoBanca",
+  "version": "1",
+  "items": [
+    {
+      "name": "Disciplinas",
+      "items": [
+        { "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/disciplinas" } },
+        { "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/disciplinas", "body": { "mode": "json", "json": "{\"nome\": \"Direito Constitucional\"}" } } },
+        { "name": "Get by ID", "request": { "method": "GET", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}" } },
+        { "name": "Update", "request": { "method": "PUT", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}", "body": { "mode": "json", "json": "{\"nome\": \"Direito Constitucional Atualizado\"}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}" } }
+      ]
+    },
+    {
+      "name": "Assuntos",
+      "items": [
+        { "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos" } },
+        { "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/assuntos", "body": { "mode": "json", "json": "{\"nome\": \"Controle de Constitucionalidade\", \"disciplina_id\": \"{{disciplina_id}}\"}" } } },
+        { "name": "Get by ID", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos/{{assunto_id}}" } },
+        { "name": "List by Disciplina", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos/disciplina/{{disciplina_id}}" } }
+      ]
+    },
+    {
+      "name": "Questions",
+      "items": [
+        { "name": "List by Filters", "request": { "method": "GET", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "json": "{\"instituicao\": \"FGV\", \"nivel\": \"Superior\"}" } } },
+        { "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "json": "{\n  \"enunciado\": \"Questão exemplo\",\n  \"ano\": 2024,\n  \"assunto_id\": \"{{assunto_id}}\",\n  \"instituicao\": \"STF\",\n  \"cargo\": \"Juiz\",\n  \"nivel\": \"Superior\",\n  \"dificuldade\": \"Médio\",\n  \"modalidade\": \"Múltipla Escolha\"\n}" } } },
+        { "name": "Get Question", "request": { "method": "GET", "url": "{{baseUrl}}/questions/{{question_id}}", "body": { "mode": "json", "json": "{\"id\": \"{{question_id}}\"}" } } }
+      ]
+    },
+    {
+      "name": "Provas",
+      "items": [
+        { "name": "Generate PDF", "request": { "method": "POST", "url": "{{baseUrl}}/provas", "body": { "mode": "json", "json": "{\"assunto_id\": \"{{assunto_id}}\", \"cargo\": \"Analista\", \"nivel\": \"Superior\"}" } } }
+      ]
+    }
+  ]
+}

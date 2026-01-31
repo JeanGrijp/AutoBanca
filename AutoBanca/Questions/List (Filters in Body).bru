@@ -1,0 +1,15 @@
+meta {
+  name: List (Filters in Body)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/questions
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/disciplinas/{{disciplina_id}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
