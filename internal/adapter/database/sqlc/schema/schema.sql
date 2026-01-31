@@ -1,55 +1,54 @@
 -- Ativa a extensão para geração de UUID (caso não esteja ativa)
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. Tabela de Disciplinas
-CREATE TABLE disciplinas (
+-- 1. Subjects table
+CREATE TABLE subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-    nome VARCHAR(100) NOT NULL UNIQUE
+    name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- 2. Tabela de Assuntos (Relacionada a Disciplinas)
-CREATE TABLE assuntos (
+-- 2. Topics table (related to subjects)
+CREATE TABLE topics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-    disciplina_id UUID NOT NULL,
-    nome VARCHAR(100) NOT NULL,
-    CONSTRAINT fk_disciplina FOREIGN KEY (disciplina_id) REFERENCES disciplinas (id) ON DELETE CASCADE
+    subject_id UUID NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    CONSTRAINT fk_subject FOREIGN KEY (subject_id) REFERENCES subjects (id) ON DELETE CASCADE
 );
 
--- 3. Tabela de Questões
+-- 3. Questions table
 CREATE TABLE questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-    enunciado TEXT NOT NULL,
-    ano INT NOT NULL,
-    assunto_id UUID NOT NULL,
-    instituicao VARCHAR(100),
-    cargo VARCHAR(100),
-    nivel VARCHAR(20), -- Sugestão: Superior, Médio, Fundamental
-    dificuldade VARCHAR(20), -- Sugestão: Fácil, Média, Difícil
-    modalidade VARCHAR(20), -- Sugestão: Múltipla Escolha, Certo/Errado
-    area_atuacao VARCHAR(50),
-    area_formacao VARCHAR(50),
+    statement TEXT NOT NULL,
+    year INT NOT NULL,
+    topic_id UUID NOT NULL,
+    position VARCHAR(100),
+    level VARCHAR(20), -- Suggested: Superior, Médio, Fundamental
+    difficulty VARCHAR(20), -- Suggested: Fácil, Média, Difícil
+    modality VARCHAR(20), -- Suggested: Múltipla Escolha, Certo/Errado
+    practice_area VARCHAR(50),
+    field_of_study VARCHAR(50),
     created_at TIMESTAMP
     WITH
         TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_assunto FOREIGN KEY (assunto_id) REFERENCES assuntos (id)
+        CONSTRAINT fk_topic FOREIGN KEY (topic_id) REFERENCES topics (id)
 );
 
--- 4. Tabela de Alternativas
-CREATE TABLE alternativas (
+-- 4. Choices table
+CREATE TABLE choices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
     question_id UUID NOT NULL,
-    texto_alternativa TEXT NOT NULL,
-    correta BOOLEAN DEFAULT FALSE,
+    choice_text TEXT NOT NULL,
+    is_correct BOOLEAN DEFAULT FALSE,
     CONSTRAINT fk_question FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
 );
 
 -- Índices para acelerar a geração automática de provas (filtros comuns)
-CREATE INDEX idx_questions_assunto ON questions (assunto_id);
+CREATE INDEX idx_questions_topic_id ON questions (topic_id);
 
-CREATE INDEX idx_questions_nivel_dificuldade ON questions (nivel, dificuldade);
+CREATE INDEX idx_questions_level_difficulty ON questions (level, difficulty);
 
-CREATE INDEX idx_questions_area_atuacao ON questions (area_atuacao);
+CREATE INDEX idx_questions_practice_area ON questions (practice_area);
 
-CREATE INDEX idx_questions_area_formacao ON questions (area_formacao);
+CREATE INDEX idx_questions_field_of_study ON questions (field_of_study);
 
-CREATE INDEX idx_alternativas_question_id ON alternativas (question_id);
+CREATE INDEX idx_choices_question_id ON choices (question_id);

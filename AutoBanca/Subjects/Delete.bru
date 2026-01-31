@@ -1,0 +1,20 @@
+meta {
+  name: Delete
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/subjects/{{subject_id}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  subject_id: 9848d9b2-3b75-488e-98cd-6c376e77a3e3
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

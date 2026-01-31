@@ -1,16 +1,15 @@
 -- name: CreateQuestion :one
 INSERT INTO
     questions (
-        enunciado,
-        ano,
-        assunto_id,
-        instituicao,
-        cargo,
-        nivel,
-        dificuldade,
-        modalidade,
-        area_atuacao,
-        area_formacao
+        statement,
+        year,
+        topic_id,
+        position,
+        level,
+        difficulty,
+        modality,
+        practice_area,
+        field_of_study
     )
 VALUES (
         $1,
@@ -21,9 +20,16 @@ VALUES (
         $6,
         $7,
         $8,
-        $9,
-        $10
+        $9
     ) RETURNING *;
+
+-- name: QuestionExistsByStatement :one
+SELECT EXISTS (
+        SELECT 1
+        FROM questions
+        WHERE
+            statement = $1
+    ) AS exists;
 
 -- name: GetQuestion :one
 SELECT * FROM questions WHERE id = $1;
@@ -34,153 +40,162 @@ SELECT * FROM questions ORDER BY created_at DESC;
 -- name: UpdateQuestion :one
 UPDATE questions
 SET
-    enunciado = $2,
-    ano = $3,
-    assunto_id = $4,
-    instituicao = $5,
-    cargo = $6,
-    nivel = $7,
-    dificuldade = $8,
-    modalidade = $9,
-    area_atuacao = $10,
-    area_formacao = $11
+    statement = $2,
+    year = $3,
+    topic_id = $4,
+    position = $5,
+    level = $6,
+    difficulty = $7,
+    modality = $8,
+    practice_area = $9,
+    field_of_study = $10
 WHERE
     id = $1 RETURNING *;
 
 -- name: DeleteQuestion :exec
 DELETE FROM questions WHERE id = $1;
 
--- name: ListQuestionsByAssunto :many
+-- name: ListQuestionsByTopic :many
 SELECT *
 FROM questions
 WHERE
-    assunto_id = $1
+    topic_id = $1
 ORDER BY created_at DESC;
 
 -- name: CountQuestions :one
 SELECT COUNT(*) FROM questions;
 
--- name: CountQuestionsByAssunto :one
-SELECT COUNT(*) FROM questions WHERE assunto_id = $1;
+-- name: CountQuestionsByTopic :one
+SELECT COUNT(*) FROM questions WHERE topic_id = $1;
 
--- name: ListQuestionsByInstituicao :many
+-- name: ListQuestionsByYear :many
+SELECT * FROM questions WHERE year = $1 ORDER BY created_at DESC;
+
+-- name: CountQuestionsByYear :one
+SELECT COUNT(*) FROM questions WHERE year = $1;
+
+-- name: ListQuestionsByLevel :many
 SELECT *
 FROM questions
 WHERE
-    instituicao = $1
+    level = $1
 ORDER BY created_at DESC;
 
--- name: CountQuestionsByInstituicao :one
-SELECT COUNT(*) FROM questions WHERE instituicao = $1;
+-- name: CountQuestionsByLevel :one
+SELECT COUNT(*) FROM questions WHERE level = $1;
 
--- name: ListQuestionsByDificuldadeAndInstituicao :many
+-- name: ListQuestionsByModality :many
 SELECT *
 FROM questions
 WHERE
-    dificuldade = $1
-    AND instituicao = $2
+    modality = $1
 ORDER BY created_at DESC;
 
--- name: CountQuestionsByDificuldadeAndInstituicao :one
-SELECT COUNT(*)
-FROM questions
-WHERE
-    dificuldade = $1
-    AND instituicao = $2;
+-- name: CountQuestionsByModality :one
+SELECT COUNT(*) FROM questions WHERE modality = $1;
 
--- name: ListQuestionsByAno :many
-SELECT * FROM questions WHERE ano = $1 ORDER BY created_at DESC;
-
--- name: CountQuestionsByAno :one
-SELECT COUNT(*) FROM questions WHERE ano = $1;
-
--- name: ListQuestionsByNivel :many
+-- name: ListQuestionsByPracticeArea :many
 SELECT *
 FROM questions
 WHERE
-    nivel = $1
+    practice_area = $1
 ORDER BY created_at DESC;
 
--- name: CountQuestionsByNivel :one
-SELECT COUNT(*) FROM questions WHERE nivel = $1;
+-- name: CountQuestionsByPracticeArea :one
+SELECT COUNT(*) FROM questions WHERE practice_area = $1;
 
--- name: ListQuestionsByModalidade :many
+-- name: ListQuestionsByFieldOfStudy :many
 SELECT *
 FROM questions
 WHERE
-    modalidade = $1
+    field_of_study = $1
 ORDER BY created_at DESC;
 
--- name: CountQuestionsByModalidade :one
-SELECT COUNT(*) FROM questions WHERE modalidade = $1;
+-- name: CountQuestionsByFieldOfStudy :one
+SELECT COUNT(*) FROM questions WHERE field_of_study = $1;
 
--- name: ListQuestionsByAreaAtuacao :many
+-- name: ListQuestionsByYearAndLevel :many
 SELECT *
 FROM questions
 WHERE
-    area_atuacao = $1
+    year = $1
+    AND level = $2
 ORDER BY created_at DESC;
 
--- name: CountQuestionsByAreaAtuacao :one
-SELECT COUNT(*) FROM questions WHERE area_atuacao = $1;
-
--- name: ListQuestionsByAreaFormacao :many
-SELECT *
-FROM questions
-WHERE
-    area_formacao = $1
-ORDER BY created_at DESC;
-
--- name: CountQuestionsByAreaFormacao :one
-SELECT COUNT(*) FROM questions WHERE area_formacao = $1;
-
--- name: ListQuestionsByInstituicaoAndCargo :many
-SELECT *
-FROM questions
-WHERE
-    instituicao = $1
-    AND cargo = $2
-ORDER BY created_at DESC;
-
--- name: CountQuestionsByInstituicaoAndCargo :one
-SELECT COUNT(*) FROM questions WHERE instituicao = $1 AND cargo = $2;
-
--- name: ListQuestionsByAnoAndNivel :many
-SELECT *
-FROM questions
-WHERE
-    ano = $1
-    AND nivel = $2
-ORDER BY created_at DESC;
-
--- name: CountQuestionsByAnoAndNivel :one
-SELECT COUNT(*) FROM questions WHERE ano = $1 AND nivel = $2;
+-- name: CountQuestionsByYearAndLevel :one
+SELECT COUNT(*) FROM questions WHERE year = $1 AND level = $2;
 
 -- name: ListQuestionsByFilters :many
 SELECT *
 FROM questions
 WHERE
-    (sqlc.narg('instituicao')::TEXT IS NULL OR instituicao = sqlc.narg('instituicao'))
-    AND (sqlc.narg('ano')::INT IS NULL OR ano = sqlc.narg('ano'))
-    AND (sqlc.narg('nivel')::TEXT IS NULL OR nivel = sqlc.narg('nivel'))
-    AND (sqlc.narg('dificuldade')::TEXT IS NULL OR dificuldade = sqlc.narg('dificuldade'))
-    AND (sqlc.narg('modalidade')::TEXT IS NULL OR modalidade = sqlc.narg('modalidade'))
-    AND (sqlc.narg('area_atuacao')::TEXT IS NULL OR area_atuacao = sqlc.narg('area_atuacao'))
-    AND (sqlc.narg('area_formacao')::TEXT IS NULL OR area_formacao = sqlc.narg('area_formacao'))
-    AND (sqlc.narg('assunto_id')::UUID IS NULL OR assunto_id = sqlc.narg('assunto_id'))
-    AND (sqlc.narg('cargo')::TEXT IS NULL OR cargo = sqlc.narg('cargo'))
+    (sqlc.narg('year')::INT IS NULL OR year = sqlc.narg('year'))
+    AND (sqlc.narg('level')::TEXT IS NULL OR level = sqlc.narg('level'))
+    AND (sqlc.narg('difficulty')::TEXT IS NULL OR difficulty = sqlc.narg('difficulty'))
+    AND (sqlc.narg('modality')::TEXT IS NULL OR modality = sqlc.narg('modality'))
+    AND (sqlc.narg('practice_area')::TEXT IS NULL OR practice_area = sqlc.narg('practice_area'))
+    AND (sqlc.narg('field_of_study')::TEXT IS NULL OR field_of_study = sqlc.narg('field_of_study'))
+    AND (sqlc.narg('topic_id')::UUID IS NULL OR topic_id = sqlc.narg('topic_id'))
+    AND (sqlc.narg('position')::TEXT IS NULL OR position = sqlc.narg('position'))
+    AND (sqlc.narg('questions_count')::INT IS NULL OR TRUE)
 ORDER BY created_at DESC;
 
 -- name: CountQuestionsByFilters :one
 SELECT COUNT(*)
 FROM questions
 WHERE
-    (sqlc.narg('instituicao')::TEXT IS NULL OR instituicao = sqlc.narg('instituicao'))
-    AND (sqlc.narg('ano')::INT IS NULL OR ano = sqlc.narg('ano'))
-    AND (sqlc.narg('nivel')::TEXT IS NULL OR nivel = sqlc.narg('nivel'))
-    AND (sqlc.narg('dificuldade')::TEXT IS NULL OR dificuldade = sqlc.narg('dificuldade'))
-    AND (sqlc.narg('modalidade')::TEXT IS NULL OR modalidade = sqlc.narg('modalidade'))
-    AND (sqlc.narg('area_atuacao')::TEXT IS NULL OR area_atuacao = sqlc.narg('area_atuacao'))
-    AND (sqlc.narg('area_formacao')::TEXT IS NULL OR area_formacao = sqlc.narg('area_formacao'))
-    AND (sqlc.narg('assunto_id')::UUID IS NULL OR assunto_id = sqlc.narg('assunto_id'))
-    AND (sqlc.narg('cargo')::TEXT IS NULL OR cargo = sqlc.narg('cargo'));
+    (sqlc.narg('year')::INT IS NULL OR year = sqlc.narg('year'))
+    AND (sqlc.narg('level')::TEXT IS NULL OR level = sqlc.narg('level'))
+    AND (sqlc.narg('difficulty')::TEXT IS NULL OR difficulty = sqlc.narg('difficulty'))
+    AND (sqlc.narg('modality')::TEXT IS NULL OR modality = sqlc.narg('modality'))
+    AND (sqlc.narg('practice_area')::TEXT IS NULL OR practice_area = sqlc.narg('practice_area'))
+    AND (sqlc.narg('field_of_study')::TEXT IS NULL OR field_of_study = sqlc.narg('field_of_study'))
+    AND (sqlc.narg('topic_id')::UUID IS NULL OR topic_id = sqlc.narg('topic_id'))
+    AND (sqlc.narg('position')::TEXT IS NULL OR position = sqlc.narg('position'));
+
+-- name: ListQuestionsByFiltersWithChoices :many
+SELECT 
+    q.id, q.statement, q.year, q.position, q.level,
+    q.difficulty, q.modality, q.practice_area, q.field_of_study,
+    c.id as choice_id, c.choice_text, c.is_correct
+FROM questions q
+LEFT JOIN choices c ON q.id = c.question_id
+WHERE
+    (sqlc.narg('year')::INT IS NULL OR q.year = sqlc.narg('year'))
+    AND (sqlc.narg('level')::TEXT IS NULL OR q.level = sqlc.narg('level'))
+    AND (sqlc.narg('difficulty')::TEXT IS NULL OR q.difficulty = sqlc.narg('difficulty'))
+    AND (sqlc.narg('modality')::TEXT IS NULL OR q.modality = sqlc.narg('modality'))
+    AND (sqlc.narg('practice_area')::TEXT IS NULL OR q.practice_area = sqlc.narg('practice_area'))
+    AND (sqlc.narg('field_of_study')::TEXT IS NULL OR q.field_of_study = sqlc.narg('field_of_study'))
+    AND (sqlc.narg('topic_id')::UUID IS NULL OR q.topic_id = sqlc.narg('topic_id'))
+    AND (sqlc.narg('position')::TEXT IS NULL OR q.position = sqlc.narg('position'))
+ORDER BY q.created_at DESC;
+
+-- name: GetQuestionsForExam :many
+SELECT 
+    q.id, q.statement, q.year, q.position, q.level,
+    q.difficulty, q.modality, q.practice_area, q.field_of_study,
+    t.name as topic_name, s.name as subject_name
+FROM questions q
+JOIN topics t ON q.topic_id = t.id
+JOIN subjects s ON t.subject_id = s.id
+WHERE 
+    s.id = $1 
+    AND (sqlc.narg('topic_id')::uuid IS NULL OR q.topic_id = sqlc.narg('topic_id'))
+    AND (sqlc.narg('position')::text IS NULL OR q.position = sqlc.narg('position'))
+    AND (sqlc.narg('level')::text IS NULL OR q.level = sqlc.narg('level'))
+    AND (sqlc.narg('difficulty')::text IS NULL OR q.difficulty = sqlc.narg('difficulty'))
+ORDER BY RANDOM()
+LIMIT $2;
+
+-- name: CountQuestionsForExam :one
+SELECT COUNT(*)
+FROM questions q
+JOIN topics t ON q.topic_id = t.id
+JOIN subjects s ON t.subject_id = s.id
+WHERE 
+    s.id = $1 
+    AND (sqlc.narg('topic_id')::uuid IS NULL OR q.topic_id = sqlc.narg('topic_id'))
+    AND (sqlc.narg('position')::text IS NULL OR q.position = sqlc.narg('position'))
+    AND (sqlc.narg('level')::text IS NULL OR q.level = sqlc.narg('level'))
+    AND (sqlc.narg('difficulty')::text IS NULL OR q.difficulty = sqlc.narg('difficulty'));

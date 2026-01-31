@@ -22,81 +22,12 @@ func (q *Queries) CountQuestions(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-const countQuestionsByAno = `-- name: CountQuestionsByAno :one
-SELECT COUNT(*) FROM questions WHERE ano = $1
+const countQuestionsByFieldOfStudy = `-- name: CountQuestionsByFieldOfStudy :one
+SELECT COUNT(*) FROM questions WHERE field_of_study = $1
 `
 
-func (q *Queries) CountQuestionsByAno(ctx context.Context, ano int32) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByAno, ano)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countQuestionsByAnoAndNivel = `-- name: CountQuestionsByAnoAndNivel :one
-SELECT COUNT(*) FROM questions WHERE ano = $1 AND nivel = $2
-`
-
-type CountQuestionsByAnoAndNivelParams struct {
-	Ano   int32       `json:"ano"`
-	Nivel pgtype.Text `json:"nivel"`
-}
-
-func (q *Queries) CountQuestionsByAnoAndNivel(ctx context.Context, arg CountQuestionsByAnoAndNivelParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByAnoAndNivel, arg.Ano, arg.Nivel)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countQuestionsByAreaAtuacao = `-- name: CountQuestionsByAreaAtuacao :one
-SELECT COUNT(*) FROM questions WHERE area_atuacao = $1
-`
-
-func (q *Queries) CountQuestionsByAreaAtuacao(ctx context.Context, areaAtuacao pgtype.Text) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByAreaAtuacao, areaAtuacao)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countQuestionsByAreaFormacao = `-- name: CountQuestionsByAreaFormacao :one
-SELECT COUNT(*) FROM questions WHERE area_formacao = $1
-`
-
-func (q *Queries) CountQuestionsByAreaFormacao(ctx context.Context, areaFormacao pgtype.Text) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByAreaFormacao, areaFormacao)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countQuestionsByAssunto = `-- name: CountQuestionsByAssunto :one
-SELECT COUNT(*) FROM questions WHERE assunto_id = $1
-`
-
-func (q *Queries) CountQuestionsByAssunto(ctx context.Context, assuntoID pgtype.UUID) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByAssunto, assuntoID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countQuestionsByDificuldadeAndInstituicao = `-- name: CountQuestionsByDificuldadeAndInstituicao :one
-SELECT COUNT(*)
-FROM questions
-WHERE
-    dificuldade = $1
-    AND instituicao = $2
-`
-
-type CountQuestionsByDificuldadeAndInstituicaoParams struct {
-	Dificuldade pgtype.Text `json:"dificuldade"`
-	Instituicao pgtype.Text `json:"instituicao"`
-}
-
-func (q *Queries) CountQuestionsByDificuldadeAndInstituicao(ctx context.Context, arg CountQuestionsByDificuldadeAndInstituicaoParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByDificuldadeAndInstituicao, arg.Dificuldade, arg.Instituicao)
+func (q *Queries) CountQuestionsByFieldOfStudy(ctx context.Context, fieldOfStudy pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByFieldOfStudy, fieldOfStudy)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -106,90 +37,143 @@ const countQuestionsByFilters = `-- name: CountQuestionsByFilters :one
 SELECT COUNT(*)
 FROM questions
 WHERE
-    ($1::TEXT IS NULL OR instituicao = $1)
-    AND ($2::INT IS NULL OR ano = $2)
-    AND ($3::TEXT IS NULL OR nivel = $3)
-    AND ($4::TEXT IS NULL OR dificuldade = $4)
-    AND ($5::TEXT IS NULL OR modalidade = $5)
-    AND ($6::TEXT IS NULL OR area_atuacao = $6)
-    AND ($7::TEXT IS NULL OR area_formacao = $7)
-    AND ($8::UUID IS NULL OR assunto_id = $8)
-    AND ($9::TEXT IS NULL OR cargo = $9)
+    ($1::INT IS NULL OR year = $1)
+    AND ($2::TEXT IS NULL OR level = $2)
+    AND ($3::TEXT IS NULL OR difficulty = $3)
+    AND ($4::TEXT IS NULL OR modality = $4)
+    AND ($5::TEXT IS NULL OR practice_area = $5)
+    AND ($6::TEXT IS NULL OR field_of_study = $6)
+    AND ($7::UUID IS NULL OR topic_id = $7)
+    AND ($8::TEXT IS NULL OR position = $8)
 `
 
 type CountQuestionsByFiltersParams struct {
-	Instituicao  pgtype.Text `json:"instituicao"`
-	Ano          pgtype.Int4 `json:"ano"`
-	Nivel        pgtype.Text `json:"nivel"`
-	Dificuldade  pgtype.Text `json:"dificuldade"`
-	Modalidade   pgtype.Text `json:"modalidade"`
-	AreaAtuacao  pgtype.Text `json:"area_atuacao"`
-	AreaFormacao pgtype.Text `json:"area_formacao"`
-	AssuntoID    pgtype.UUID `json:"assunto_id"`
-	Cargo        pgtype.Text `json:"cargo"`
+	Year         pgtype.Int4 `json:"year"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	PracticeArea pgtype.Text `json:"practice_area"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
+	TopicID      pgtype.UUID `json:"topic_id"`
+	Position     pgtype.Text `json:"position"`
 }
 
 func (q *Queries) CountQuestionsByFilters(ctx context.Context, arg CountQuestionsByFiltersParams) (int64, error) {
 	row := q.db.QueryRow(ctx, countQuestionsByFilters,
-		arg.Instituicao,
-		arg.Ano,
-		arg.Nivel,
-		arg.Dificuldade,
-		arg.Modalidade,
-		arg.AreaAtuacao,
-		arg.AreaFormacao,
-		arg.AssuntoID,
-		arg.Cargo,
+		arg.Year,
+		arg.Level,
+		arg.Difficulty,
+		arg.Modality,
+		arg.PracticeArea,
+		arg.FieldOfStudy,
+		arg.TopicID,
+		arg.Position,
 	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const countQuestionsByInstituicao = `-- name: CountQuestionsByInstituicao :one
-SELECT COUNT(*) FROM questions WHERE instituicao = $1
+const countQuestionsByLevel = `-- name: CountQuestionsByLevel :one
+SELECT COUNT(*) FROM questions WHERE level = $1
 `
 
-func (q *Queries) CountQuestionsByInstituicao(ctx context.Context, instituicao pgtype.Text) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByInstituicao, instituicao)
+func (q *Queries) CountQuestionsByLevel(ctx context.Context, level pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByLevel, level)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const countQuestionsByInstituicaoAndCargo = `-- name: CountQuestionsByInstituicaoAndCargo :one
-SELECT COUNT(*) FROM questions WHERE instituicao = $1 AND cargo = $2
+const countQuestionsByModality = `-- name: CountQuestionsByModality :one
+SELECT COUNT(*) FROM questions WHERE modality = $1
 `
 
-type CountQuestionsByInstituicaoAndCargoParams struct {
-	Instituicao pgtype.Text `json:"instituicao"`
-	Cargo       pgtype.Text `json:"cargo"`
-}
-
-func (q *Queries) CountQuestionsByInstituicaoAndCargo(ctx context.Context, arg CountQuestionsByInstituicaoAndCargoParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByInstituicaoAndCargo, arg.Instituicao, arg.Cargo)
+func (q *Queries) CountQuestionsByModality(ctx context.Context, modality pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByModality, modality)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const countQuestionsByModalidade = `-- name: CountQuestionsByModalidade :one
-SELECT COUNT(*) FROM questions WHERE modalidade = $1
+const countQuestionsByPracticeArea = `-- name: CountQuestionsByPracticeArea :one
+SELECT COUNT(*) FROM questions WHERE practice_area = $1
 `
 
-func (q *Queries) CountQuestionsByModalidade(ctx context.Context, modalidade pgtype.Text) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByModalidade, modalidade)
+func (q *Queries) CountQuestionsByPracticeArea(ctx context.Context, practiceArea pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByPracticeArea, practiceArea)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const countQuestionsByNivel = `-- name: CountQuestionsByNivel :one
-SELECT COUNT(*) FROM questions WHERE nivel = $1
+const countQuestionsByTopic = `-- name: CountQuestionsByTopic :one
+SELECT COUNT(*) FROM questions WHERE topic_id = $1
 `
 
-func (q *Queries) CountQuestionsByNivel(ctx context.Context, nivel pgtype.Text) (int64, error) {
-	row := q.db.QueryRow(ctx, countQuestionsByNivel, nivel)
+func (q *Queries) CountQuestionsByTopic(ctx context.Context, topicID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByTopic, topicID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countQuestionsByYear = `-- name: CountQuestionsByYear :one
+SELECT COUNT(*) FROM questions WHERE year = $1
+`
+
+func (q *Queries) CountQuestionsByYear(ctx context.Context, year int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByYear, year)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countQuestionsByYearAndLevel = `-- name: CountQuestionsByYearAndLevel :one
+SELECT COUNT(*) FROM questions WHERE year = $1 AND level = $2
+`
+
+type CountQuestionsByYearAndLevelParams struct {
+	Year  int32       `json:"year"`
+	Level pgtype.Text `json:"level"`
+}
+
+func (q *Queries) CountQuestionsByYearAndLevel(ctx context.Context, arg CountQuestionsByYearAndLevelParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsByYearAndLevel, arg.Year, arg.Level)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countQuestionsForExam = `-- name: CountQuestionsForExam :one
+SELECT COUNT(*)
+FROM questions q
+JOIN topics t ON q.topic_id = t.id
+JOIN subjects s ON t.subject_id = s.id
+WHERE 
+    s.id = $1 
+    AND ($2::uuid IS NULL OR q.topic_id = $2)
+    AND ($3::text IS NULL OR q.position = $3)
+    AND ($4::text IS NULL OR q.level = $4)
+    AND ($5::text IS NULL OR q.difficulty = $5)
+`
+
+type CountQuestionsForExamParams struct {
+	ID         pgtype.UUID `json:"id"`
+	TopicID    pgtype.UUID `json:"topic_id"`
+	Position   pgtype.Text `json:"position"`
+	Level      pgtype.Text `json:"level"`
+	Difficulty pgtype.Text `json:"difficulty"`
+}
+
+func (q *Queries) CountQuestionsForExam(ctx context.Context, arg CountQuestionsForExamParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countQuestionsForExam,
+		arg.ID,
+		arg.TopicID,
+		arg.Position,
+		arg.Level,
+		arg.Difficulty,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -198,16 +182,15 @@ func (q *Queries) CountQuestionsByNivel(ctx context.Context, nivel pgtype.Text) 
 const createQuestion = `-- name: CreateQuestion :one
 INSERT INTO
     questions (
-        enunciado,
-        ano,
-        assunto_id,
-        instituicao,
-        cargo,
-        nivel,
-        dificuldade,
-        modalidade,
-        area_atuacao,
-        area_formacao
+        statement,
+        year,
+        topic_id,
+        position,
+        level,
+        difficulty,
+        modality,
+        practice_area,
+        field_of_study
     )
 VALUES (
         $1,
@@ -218,50 +201,46 @@ VALUES (
         $6,
         $7,
         $8,
-        $9,
-        $10
-    ) RETURNING id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+        $9
+    ) RETURNING id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 `
 
 type CreateQuestionParams struct {
-	Enunciado    string      `json:"enunciado"`
-	Ano          int32       `json:"ano"`
-	AssuntoID    pgtype.UUID `json:"assunto_id"`
-	Instituicao  pgtype.Text `json:"instituicao"`
-	Cargo        pgtype.Text `json:"cargo"`
-	Nivel        pgtype.Text `json:"nivel"`
-	Dificuldade  pgtype.Text `json:"dificuldade"`
-	Modalidade   pgtype.Text `json:"modalidade"`
-	AreaAtuacao  pgtype.Text `json:"area_atuacao"`
-	AreaFormacao pgtype.Text `json:"area_formacao"`
+	Statement    string      `json:"statement"`
+	Year         int32       `json:"year"`
+	TopicID      pgtype.UUID `json:"topic_id"`
+	Position     pgtype.Text `json:"position"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	PracticeArea pgtype.Text `json:"practice_area"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
 }
 
 func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error) {
 	row := q.db.QueryRow(ctx, createQuestion,
-		arg.Enunciado,
-		arg.Ano,
-		arg.AssuntoID,
-		arg.Instituicao,
-		arg.Cargo,
-		arg.Nivel,
-		arg.Dificuldade,
-		arg.Modalidade,
-		arg.AreaAtuacao,
-		arg.AreaFormacao,
+		arg.Statement,
+		arg.Year,
+		arg.TopicID,
+		arg.Position,
+		arg.Level,
+		arg.Difficulty,
+		arg.Modality,
+		arg.PracticeArea,
+		arg.FieldOfStudy,
 	)
 	var i Question
 	err := row.Scan(
 		&i.ID,
-		&i.Enunciado,
-		&i.Ano,
-		&i.AssuntoID,
-		&i.Instituicao,
-		&i.Cargo,
-		&i.Nivel,
-		&i.Dificuldade,
-		&i.Modalidade,
-		&i.AreaAtuacao,
-		&i.AreaFormacao,
+		&i.Statement,
+		&i.Year,
+		&i.TopicID,
+		&i.Position,
+		&i.Level,
+		&i.Difficulty,
+		&i.Modality,
+		&i.PracticeArea,
+		&i.FieldOfStudy,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -277,7 +256,7 @@ func (q *Queries) DeleteQuestion(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getQuestion = `-- name: GetQuestion :one
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at FROM questions WHERE id = $1
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at FROM questions WHERE id = $1
 `
 
 func (q *Queries) GetQuestion(ctx context.Context, id pgtype.UUID) (Question, error) {
@@ -285,23 +264,102 @@ func (q *Queries) GetQuestion(ctx context.Context, id pgtype.UUID) (Question, er
 	var i Question
 	err := row.Scan(
 		&i.ID,
-		&i.Enunciado,
-		&i.Ano,
-		&i.AssuntoID,
-		&i.Instituicao,
-		&i.Cargo,
-		&i.Nivel,
-		&i.Dificuldade,
-		&i.Modalidade,
-		&i.AreaAtuacao,
-		&i.AreaFormacao,
+		&i.Statement,
+		&i.Year,
+		&i.TopicID,
+		&i.Position,
+		&i.Level,
+		&i.Difficulty,
+		&i.Modality,
+		&i.PracticeArea,
+		&i.FieldOfStudy,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
+const getQuestionsForExam = `-- name: GetQuestionsForExam :many
+SELECT 
+    q.id, q.statement, q.year, q.position, q.level,
+    q.difficulty, q.modality, q.practice_area, q.field_of_study,
+    t.name as topic_name, s.name as subject_name
+FROM questions q
+JOIN topics t ON q.topic_id = t.id
+JOIN subjects s ON t.subject_id = s.id
+WHERE 
+    s.id = $1 
+    AND ($3::uuid IS NULL OR q.topic_id = $3)
+    AND ($4::text IS NULL OR q.position = $4)
+    AND ($5::text IS NULL OR q.level = $5)
+    AND ($6::text IS NULL OR q.difficulty = $6)
+ORDER BY RANDOM()
+LIMIT $2
+`
+
+type GetQuestionsForExamParams struct {
+	ID         pgtype.UUID `json:"id"`
+	Limit      int32       `json:"limit"`
+	TopicID    pgtype.UUID `json:"topic_id"`
+	Position   pgtype.Text `json:"position"`
+	Level      pgtype.Text `json:"level"`
+	Difficulty pgtype.Text `json:"difficulty"`
+}
+
+type GetQuestionsForExamRow struct {
+	ID           pgtype.UUID `json:"id"`
+	Statement    string      `json:"statement"`
+	Year         int32       `json:"year"`
+	Position     pgtype.Text `json:"position"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	PracticeArea pgtype.Text `json:"practice_area"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
+	TopicName    string      `json:"topic_name"`
+	SubjectName  string      `json:"subject_name"`
+}
+
+func (q *Queries) GetQuestionsForExam(ctx context.Context, arg GetQuestionsForExamParams) ([]GetQuestionsForExamRow, error) {
+	rows, err := q.db.Query(ctx, getQuestionsForExam,
+		arg.ID,
+		arg.Limit,
+		arg.TopicID,
+		arg.Position,
+		arg.Level,
+		arg.Difficulty,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetQuestionsForExamRow{}
+	for rows.Next() {
+		var i GetQuestionsForExamRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Statement,
+			&i.Year,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
+			&i.TopicName,
+			&i.SubjectName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listQuestions = `-- name: ListQuestions :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at FROM questions ORDER BY created_at DESC
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at FROM questions ORDER BY created_at DESC
 `
 
 func (q *Queries) ListQuestions(ctx context.Context) ([]Question, error) {
@@ -315,16 +373,15 @@ func (q *Queries) ListQuestions(ctx context.Context) ([]Question, error) {
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -337,59 +394,16 @@ func (q *Queries) ListQuestions(ctx context.Context) ([]Question, error) {
 	return items, nil
 }
 
-const listQuestionsByAno = `-- name: ListQuestionsByAno :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at FROM questions WHERE ano = $1 ORDER BY created_at DESC
-`
-
-func (q *Queries) ListQuestionsByAno(ctx context.Context, ano int32) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByAno, ano)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Question{}
-	for rows.Next() {
-		var i Question
-		if err := rows.Scan(
-			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listQuestionsByAnoAndNivel = `-- name: ListQuestionsByAnoAndNivel :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+const listQuestionsByFieldOfStudy = `-- name: ListQuestionsByFieldOfStudy :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 FROM questions
 WHERE
-    ano = $1
-    AND nivel = $2
+    field_of_study = $1
 ORDER BY created_at DESC
 `
 
-type ListQuestionsByAnoAndNivelParams struct {
-	Ano   int32       `json:"ano"`
-	Nivel pgtype.Text `json:"nivel"`
-}
-
-func (q *Queries) ListQuestionsByAnoAndNivel(ctx context.Context, arg ListQuestionsByAnoAndNivelParams) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByAnoAndNivel, arg.Ano, arg.Nivel)
+func (q *Queries) ListQuestionsByFieldOfStudy(ctx context.Context, fieldOfStudy pgtype.Text) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByFieldOfStudy, fieldOfStudy)
 	if err != nil {
 		return nil, err
 	}
@@ -399,186 +413,15 @@ func (q *Queries) ListQuestionsByAnoAndNivel(ctx context.Context, arg ListQuesti
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listQuestionsByAreaAtuacao = `-- name: ListQuestionsByAreaAtuacao :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
-FROM questions
-WHERE
-    area_atuacao = $1
-ORDER BY created_at DESC
-`
-
-func (q *Queries) ListQuestionsByAreaAtuacao(ctx context.Context, areaAtuacao pgtype.Text) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByAreaAtuacao, areaAtuacao)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Question{}
-	for rows.Next() {
-		var i Question
-		if err := rows.Scan(
-			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listQuestionsByAreaFormacao = `-- name: ListQuestionsByAreaFormacao :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
-FROM questions
-WHERE
-    area_formacao = $1
-ORDER BY created_at DESC
-`
-
-func (q *Queries) ListQuestionsByAreaFormacao(ctx context.Context, areaFormacao pgtype.Text) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByAreaFormacao, areaFormacao)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Question{}
-	for rows.Next() {
-		var i Question
-		if err := rows.Scan(
-			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listQuestionsByAssunto = `-- name: ListQuestionsByAssunto :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
-FROM questions
-WHERE
-    assunto_id = $1
-ORDER BY created_at DESC
-`
-
-func (q *Queries) ListQuestionsByAssunto(ctx context.Context, assuntoID pgtype.UUID) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByAssunto, assuntoID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Question{}
-	for rows.Next() {
-		var i Question
-		if err := rows.Scan(
-			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listQuestionsByDificuldadeAndInstituicao = `-- name: ListQuestionsByDificuldadeAndInstituicao :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
-FROM questions
-WHERE
-    dificuldade = $1
-    AND instituicao = $2
-ORDER BY created_at DESC
-`
-
-type ListQuestionsByDificuldadeAndInstituicaoParams struct {
-	Dificuldade pgtype.Text `json:"dificuldade"`
-	Instituicao pgtype.Text `json:"instituicao"`
-}
-
-func (q *Queries) ListQuestionsByDificuldadeAndInstituicao(ctx context.Context, arg ListQuestionsByDificuldadeAndInstituicaoParams) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByDificuldadeAndInstituicao, arg.Dificuldade, arg.Instituicao)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Question{}
-	for rows.Next() {
-		var i Question
-		if err := rows.Scan(
-			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -592,44 +435,44 @@ func (q *Queries) ListQuestionsByDificuldadeAndInstituicao(ctx context.Context, 
 }
 
 const listQuestionsByFilters = `-- name: ListQuestionsByFilters :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 FROM questions
 WHERE
-    ($1::TEXT IS NULL OR instituicao = $1)
-    AND ($2::INT IS NULL OR ano = $2)
-    AND ($3::TEXT IS NULL OR nivel = $3)
-    AND ($4::TEXT IS NULL OR dificuldade = $4)
-    AND ($5::TEXT IS NULL OR modalidade = $5)
-    AND ($6::TEXT IS NULL OR area_atuacao = $6)
-    AND ($7::TEXT IS NULL OR area_formacao = $7)
-    AND ($8::UUID IS NULL OR assunto_id = $8)
-    AND ($9::TEXT IS NULL OR cargo = $9)
+    ($1::INT IS NULL OR year = $1)
+    AND ($2::TEXT IS NULL OR level = $2)
+    AND ($3::TEXT IS NULL OR difficulty = $3)
+    AND ($4::TEXT IS NULL OR modality = $4)
+    AND ($5::TEXT IS NULL OR practice_area = $5)
+    AND ($6::TEXT IS NULL OR field_of_study = $6)
+    AND ($7::UUID IS NULL OR topic_id = $7)
+    AND ($8::TEXT IS NULL OR position = $8)
+    AND ($9::INT IS NULL OR TRUE)
 ORDER BY created_at DESC
 `
 
 type ListQuestionsByFiltersParams struct {
-	Instituicao  pgtype.Text `json:"instituicao"`
-	Ano          pgtype.Int4 `json:"ano"`
-	Nivel        pgtype.Text `json:"nivel"`
-	Dificuldade  pgtype.Text `json:"dificuldade"`
-	Modalidade   pgtype.Text `json:"modalidade"`
-	AreaAtuacao  pgtype.Text `json:"area_atuacao"`
-	AreaFormacao pgtype.Text `json:"area_formacao"`
-	AssuntoID    pgtype.UUID `json:"assunto_id"`
-	Cargo        pgtype.Text `json:"cargo"`
+	Year           pgtype.Int4 `json:"year"`
+	Level          pgtype.Text `json:"level"`
+	Difficulty     pgtype.Text `json:"difficulty"`
+	Modality       pgtype.Text `json:"modality"`
+	PracticeArea   pgtype.Text `json:"practice_area"`
+	FieldOfStudy   pgtype.Text `json:"field_of_study"`
+	TopicID        pgtype.UUID `json:"topic_id"`
+	Position       pgtype.Text `json:"position"`
+	QuestionsCount pgtype.Int4 `json:"questions_count"`
 }
 
 func (q *Queries) ListQuestionsByFilters(ctx context.Context, arg ListQuestionsByFiltersParams) ([]Question, error) {
 	rows, err := q.db.Query(ctx, listQuestionsByFilters,
-		arg.Instituicao,
-		arg.Ano,
-		arg.Nivel,
-		arg.Dificuldade,
-		arg.Modalidade,
-		arg.AreaAtuacao,
-		arg.AreaFormacao,
-		arg.AssuntoID,
-		arg.Cargo,
+		arg.Year,
+		arg.Level,
+		arg.Difficulty,
+		arg.Modality,
+		arg.PracticeArea,
+		arg.FieldOfStudy,
+		arg.TopicID,
+		arg.Position,
+		arg.QuestionsCount,
 	)
 	if err != nil {
 		return nil, err
@@ -640,16 +483,15 @@ func (q *Queries) ListQuestionsByFilters(ctx context.Context, arg ListQuestionsB
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -662,16 +504,103 @@ func (q *Queries) ListQuestionsByFilters(ctx context.Context, arg ListQuestionsB
 	return items, nil
 }
 
-const listQuestionsByInstituicao = `-- name: ListQuestionsByInstituicao :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+const listQuestionsByFiltersWithChoices = `-- name: ListQuestionsByFiltersWithChoices :many
+SELECT 
+    q.id, q.statement, q.year, q.position, q.level,
+    q.difficulty, q.modality, q.practice_area, q.field_of_study,
+    c.id as choice_id, c.choice_text, c.is_correct
+FROM questions q
+LEFT JOIN choices c ON q.id = c.question_id
+WHERE
+    ($1::INT IS NULL OR q.year = $1)
+    AND ($2::TEXT IS NULL OR q.level = $2)
+    AND ($3::TEXT IS NULL OR q.difficulty = $3)
+    AND ($4::TEXT IS NULL OR q.modality = $4)
+    AND ($5::TEXT IS NULL OR q.practice_area = $5)
+    AND ($6::TEXT IS NULL OR q.field_of_study = $6)
+    AND ($7::UUID IS NULL OR q.topic_id = $7)
+    AND ($8::TEXT IS NULL OR q.position = $8)
+ORDER BY q.created_at DESC
+`
+
+type ListQuestionsByFiltersWithChoicesParams struct {
+	Year         pgtype.Int4 `json:"year"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	PracticeArea pgtype.Text `json:"practice_area"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
+	TopicID      pgtype.UUID `json:"topic_id"`
+	Position     pgtype.Text `json:"position"`
+}
+
+type ListQuestionsByFiltersWithChoicesRow struct {
+	ID           pgtype.UUID `json:"id"`
+	Statement    string      `json:"statement"`
+	Year         int32       `json:"year"`
+	Position     pgtype.Text `json:"position"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	PracticeArea pgtype.Text `json:"practice_area"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
+	ChoiceID     pgtype.UUID `json:"choice_id"`
+	ChoiceText   pgtype.Text `json:"choice_text"`
+	IsCorrect    pgtype.Bool `json:"is_correct"`
+}
+
+func (q *Queries) ListQuestionsByFiltersWithChoices(ctx context.Context, arg ListQuestionsByFiltersWithChoicesParams) ([]ListQuestionsByFiltersWithChoicesRow, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByFiltersWithChoices,
+		arg.Year,
+		arg.Level,
+		arg.Difficulty,
+		arg.Modality,
+		arg.PracticeArea,
+		arg.FieldOfStudy,
+		arg.TopicID,
+		arg.Position,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListQuestionsByFiltersWithChoicesRow{}
+	for rows.Next() {
+		var i ListQuestionsByFiltersWithChoicesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Statement,
+			&i.Year,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
+			&i.ChoiceID,
+			&i.ChoiceText,
+			&i.IsCorrect,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listQuestionsByLevel = `-- name: ListQuestionsByLevel :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 FROM questions
 WHERE
-    instituicao = $1
+    level = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListQuestionsByInstituicao(ctx context.Context, instituicao pgtype.Text) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByInstituicao, instituicao)
+func (q *Queries) ListQuestionsByLevel(ctx context.Context, level pgtype.Text) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByLevel, level)
 	if err != nil {
 		return nil, err
 	}
@@ -681,16 +610,15 @@ func (q *Queries) ListQuestionsByInstituicao(ctx context.Context, instituicao pg
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -703,22 +631,16 @@ func (q *Queries) ListQuestionsByInstituicao(ctx context.Context, instituicao pg
 	return items, nil
 }
 
-const listQuestionsByInstituicaoAndCargo = `-- name: ListQuestionsByInstituicaoAndCargo :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+const listQuestionsByModality = `-- name: ListQuestionsByModality :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 FROM questions
 WHERE
-    instituicao = $1
-    AND cargo = $2
+    modality = $1
 ORDER BY created_at DESC
 `
 
-type ListQuestionsByInstituicaoAndCargoParams struct {
-	Instituicao pgtype.Text `json:"instituicao"`
-	Cargo       pgtype.Text `json:"cargo"`
-}
-
-func (q *Queries) ListQuestionsByInstituicaoAndCargo(ctx context.Context, arg ListQuestionsByInstituicaoAndCargoParams) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByInstituicaoAndCargo, arg.Instituicao, arg.Cargo)
+func (q *Queries) ListQuestionsByModality(ctx context.Context, modality pgtype.Text) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByModality, modality)
 	if err != nil {
 		return nil, err
 	}
@@ -728,16 +650,15 @@ func (q *Queries) ListQuestionsByInstituicaoAndCargo(ctx context.Context, arg Li
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -750,16 +671,16 @@ func (q *Queries) ListQuestionsByInstituicaoAndCargo(ctx context.Context, arg Li
 	return items, nil
 }
 
-const listQuestionsByModalidade = `-- name: ListQuestionsByModalidade :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+const listQuestionsByPracticeArea = `-- name: ListQuestionsByPracticeArea :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 FROM questions
 WHERE
-    modalidade = $1
+    practice_area = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListQuestionsByModalidade(ctx context.Context, modalidade pgtype.Text) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByModalidade, modalidade)
+func (q *Queries) ListQuestionsByPracticeArea(ctx context.Context, practiceArea pgtype.Text) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByPracticeArea, practiceArea)
 	if err != nil {
 		return nil, err
 	}
@@ -769,16 +690,15 @@ func (q *Queries) ListQuestionsByModalidade(ctx context.Context, modalidade pgty
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -791,16 +711,16 @@ func (q *Queries) ListQuestionsByModalidade(ctx context.Context, modalidade pgty
 	return items, nil
 }
 
-const listQuestionsByNivel = `-- name: ListQuestionsByNivel :many
-SELECT id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+const listQuestionsByTopic = `-- name: ListQuestionsByTopic :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 FROM questions
 WHERE
-    nivel = $1
+    topic_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListQuestionsByNivel(ctx context.Context, nivel pgtype.Text) ([]Question, error) {
-	rows, err := q.db.Query(ctx, listQuestionsByNivel, nivel)
+func (q *Queries) ListQuestionsByTopic(ctx context.Context, topicID pgtype.UUID) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByTopic, topicID)
 	if err != nil {
 		return nil, err
 	}
@@ -810,16 +730,15 @@ func (q *Queries) ListQuestionsByNivel(ctx context.Context, nivel pgtype.Text) (
 		var i Question
 		if err := rows.Scan(
 			&i.ID,
-			&i.Enunciado,
-			&i.Ano,
-			&i.AssuntoID,
-			&i.Instituicao,
-			&i.Cargo,
-			&i.Nivel,
-			&i.Dificuldade,
-			&i.Modalidade,
-			&i.AreaAtuacao,
-			&i.AreaFormacao,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -830,66 +749,155 @@ func (q *Queries) ListQuestionsByNivel(ctx context.Context, nivel pgtype.Text) (
 		return nil, err
 	}
 	return items, nil
+}
+
+const listQuestionsByYear = `-- name: ListQuestionsByYear :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at FROM questions WHERE year = $1 ORDER BY created_at DESC
+`
+
+func (q *Queries) ListQuestionsByYear(ctx context.Context, year int32) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByYear, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Question{}
+	for rows.Next() {
+		var i Question
+		if err := rows.Scan(
+			&i.ID,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listQuestionsByYearAndLevel = `-- name: ListQuestionsByYearAndLevel :many
+SELECT id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
+FROM questions
+WHERE
+    year = $1
+    AND level = $2
+ORDER BY created_at DESC
+`
+
+type ListQuestionsByYearAndLevelParams struct {
+	Year  int32       `json:"year"`
+	Level pgtype.Text `json:"level"`
+}
+
+func (q *Queries) ListQuestionsByYearAndLevel(ctx context.Context, arg ListQuestionsByYearAndLevelParams) ([]Question, error) {
+	rows, err := q.db.Query(ctx, listQuestionsByYearAndLevel, arg.Year, arg.Level)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Question{}
+	for rows.Next() {
+		var i Question
+		if err := rows.Scan(
+			&i.ID,
+			&i.Statement,
+			&i.Year,
+			&i.TopicID,
+			&i.Position,
+			&i.Level,
+			&i.Difficulty,
+			&i.Modality,
+			&i.PracticeArea,
+			&i.FieldOfStudy,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const questionExistsByStatement = `-- name: QuestionExistsByStatement :one
+SELECT EXISTS(SELECT 1 FROM questions WHERE statement = $1) AS exists
+`
+
+func (q *Queries) QuestionExistsByStatement(ctx context.Context, statement string) (bool, error) {
+	row := q.db.QueryRow(ctx, questionExistsByStatement, statement)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const updateQuestion = `-- name: UpdateQuestion :one
 UPDATE questions
 SET
-    enunciado = $2,
-    ano = $3,
-    assunto_id = $4,
-    instituicao = $5,
-    cargo = $6,
-    nivel = $7,
-    dificuldade = $8,
-    modalidade = $9,
-    area_atuacao = $10,
-    area_formacao = $11
+    statement = $2,
+    year = $3,
+    topic_id = $4,
+    position = $5,
+    level = $6,
+    difficulty = $7,
+    modality = $8,
+    practice_area = $9,
+    field_of_study = $10
 WHERE
-    id = $1 RETURNING id, enunciado, ano, assunto_id, instituicao, cargo, nivel, dificuldade, modalidade, area_atuacao, area_formacao, created_at
+    id = $1 RETURNING id, statement, year, topic_id, position, level, difficulty, modality, practice_area, field_of_study, created_at
 `
 
 type UpdateQuestionParams struct {
 	ID           pgtype.UUID `json:"id"`
-	Enunciado    string      `json:"enunciado"`
-	Ano          int32       `json:"ano"`
-	AssuntoID    pgtype.UUID `json:"assunto_id"`
-	Instituicao  pgtype.Text `json:"instituicao"`
-	Cargo        pgtype.Text `json:"cargo"`
-	Nivel        pgtype.Text `json:"nivel"`
-	Dificuldade  pgtype.Text `json:"dificuldade"`
-	Modalidade   pgtype.Text `json:"modalidade"`
-	AreaAtuacao  pgtype.Text `json:"area_atuacao"`
-	AreaFormacao pgtype.Text `json:"area_formacao"`
+	Statement    string      `json:"statement"`
+	Year         int32       `json:"year"`
+	TopicID      pgtype.UUID `json:"topic_id"`
+	Position     pgtype.Text `json:"position"`
+	Level        pgtype.Text `json:"level"`
+	Difficulty   pgtype.Text `json:"difficulty"`
+	Modality     pgtype.Text `json:"modality"`
+	PracticeArea pgtype.Text `json:"practice_area"`
+	FieldOfStudy pgtype.Text `json:"field_of_study"`
 }
 
 func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error) {
 	row := q.db.QueryRow(ctx, updateQuestion,
 		arg.ID,
-		arg.Enunciado,
-		arg.Ano,
-		arg.AssuntoID,
-		arg.Instituicao,
-		arg.Cargo,
-		arg.Nivel,
-		arg.Dificuldade,
-		arg.Modalidade,
-		arg.AreaAtuacao,
-		arg.AreaFormacao,
+		arg.Statement,
+		arg.Year,
+		arg.TopicID,
+		arg.Position,
+		arg.Level,
+		arg.Difficulty,
+		arg.Modality,
+		arg.PracticeArea,
+		arg.FieldOfStudy,
 	)
 	var i Question
 	err := row.Scan(
 		&i.ID,
-		&i.Enunciado,
-		&i.Ano,
-		&i.AssuntoID,
-		&i.Instituicao,
-		&i.Cargo,
-		&i.Nivel,
-		&i.Dificuldade,
-		&i.Modalidade,
-		&i.AreaAtuacao,
-		&i.AreaFormacao,
+		&i.Statement,
+		&i.Year,
+		&i.TopicID,
+		&i.Position,
+		&i.Level,
+		&i.Difficulty,
+		&i.Modality,
+		&i.PracticeArea,
+		&i.FieldOfStudy,
 		&i.CreatedAt,
 	)
 	return i, err

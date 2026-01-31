@@ -11,9 +11,9 @@ services:
     networks:
       - autobanca_network
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
       # Load schema at first run
-      - ./internal/adapter/database/sqlc/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./internal/adapter/database/sqlc/schema/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     restart: always
 
   autobanca_app:

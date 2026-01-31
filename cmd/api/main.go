@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/JeanGrijp/AutoBanca/internal/adapter/database/sqlc/db"
 	"github.com/JeanGrijp/AutoBanca/internal/api"
@@ -31,41 +31,42 @@ func main() {
 
 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname)
 
-	conn, err := pgx.Connect(ctx, connString)
+	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		slog.ErrorContext(ctx, "Unable to connect to database", "error", err)
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(ctx)
+	defer pool.Close()
 
 	// Inicializa o Querier do sqlc
-	queries := db.New(conn)
+	queries := db.New(pool)
 	slog.InfoContext(ctx, "Database connection established")
 
 	// Inicializa os Services e Handlers (arquitetura simplificada)
-	disciplinaService := service.NewDisciplinaService(queries)
-	assuntoService := service.NewAssuntoService(queries)
-	alternativaService := service.NewAlternativaService(queries)
+	subjectService := service.NewSubjectService(queries)
+	topicService := service.NewTopicService(queries)
+	choiceService := service.NewChoiceService(queries)
 	questionService := service.NewQuestionService(queries)
-	provaService := service.NewProvaService(queries)
+	importService := service.NewImportService(pool)
+	examService := service.NewExamService(queries, subjectService, topicService, questionService)
 
 	slog.InfoContext(ctx, "Initializing handlers")
 
-	assuntoHandler := handlers.NewAssuntoHandler(ctx, assuntoService)
-	alternativaHandler := handlers.NewAlternativaHandler(alternativaService)
-	questionHandler := handlers.NewQuestionHandler(questionService)
-	provaHandler := handlers.NewProvaHandler(provaService)
+	topicHandler := handlers.NewTopicHandler(ctx, topicService)
+	choiceHandler := handlers.NewChoiceHandler(choiceService)
+	questionHandler := handlers.NewQuestionHandler(questionService, choiceService, importService)
+	examHandler := handlers.NewExamHandler(examService)
 
-	disciplinaHandler := handlers.NewDisciplinaHandler(disciplinaService)
+	subjectHandler := handlers.NewSubjectHandler(subjectService)
 
 	// Inicializa o Router
 	r := api.NewRouter(&api.RouterHandlers{
-		DisciplinaHandler:  disciplinaHandler,
-		AssuntoHandler:     assuntoHandler,
-		AlternativaHandler: alternativaHandler,
-		QuestionHandler:    questionHandler,
-		ProvaHandler:       provaHandler,
+		SubjectHandler:  subjectHandler,
+		TopicHandler:    topicHandler,
+		ChoiceHandler:   choiceHandler,
+		QuestionHandler: questionHandler,
+		ExamHandler:     examHandler,
 	})
 
 	slog.InfoContext(ctx, "Server executing on port 8000")

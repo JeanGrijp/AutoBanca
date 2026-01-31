@@ -1,0 +1,15 @@
+meta {
+  name: List by Question
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/choices?question_id={{question_id}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

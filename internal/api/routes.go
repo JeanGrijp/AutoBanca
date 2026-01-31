@@ -17,11 +17,11 @@ import (
 )
 
 type RouterHandlers struct {
-	DisciplinaHandler  *handlers.DisciplinaHandler
-	AssuntoHandler     *handlers.AssuntoHandler
-	AlternativaHandler *handlers.AlternativaHandler
-	QuestionHandler    *handlers.QuestionHandler
-	ProvaHandler       *handlers.ProvaHandler
+	SubjectHandler  *handlers.SubjectHandler
+	TopicHandler    *handlers.TopicHandler
+	ChoiceHandler   *handlers.ChoiceHandler
+	QuestionHandler *handlers.QuestionHandler
+	ExamHandler     *handlers.ExamHandler
 }
 
 func NewRouter(handlers *RouterHandlers) http.Handler {
@@ -29,29 +29,29 @@ func NewRouter(handlers *RouterHandlers) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Route("/disciplinas", func(r chi.Router) {
-		r.Get("/", handlers.DisciplinaHandler.ListDisciplinas)
-		r.Post("/", handlers.DisciplinaHandler.CreateDisciplina)
-		r.Get("/{id}", handlers.DisciplinaHandler.GetDisciplina)
-		r.Put("/{id}", handlers.DisciplinaHandler.UpdateDisciplina)
-		r.Delete("/{id}", handlers.DisciplinaHandler.DeleteDisciplina)
+	r.Route("/subjects", func(r chi.Router) {
+		r.Get("/", handlers.SubjectHandler.ListSubjects)
+		r.Post("/", handlers.SubjectHandler.CreateSubject)
+		r.Get("/{id}", handlers.SubjectHandler.GetSubject)
+		r.Put("/{id}", handlers.SubjectHandler.UpdateSubject)
+		r.Delete("/{id}", handlers.SubjectHandler.DeleteSubject)
 	})
 
-	r.Route("/assuntos", func(r chi.Router) {
-		r.Get("/", handlers.AssuntoHandler.ListAssuntos)
-		r.Post("/", handlers.AssuntoHandler.CreateAssunto)
-		r.Get("/{id}", handlers.AssuntoHandler.GetAssunto)
-		r.Put("/{id}", handlers.AssuntoHandler.UpdateAssunto)
-		r.Delete("/{id}", handlers.AssuntoHandler.DeleteAssunto)
-		r.Get("/disciplina/{disciplina_id}", handlers.AssuntoHandler.ListAssuntosByDisciplina)
+	r.Route("/topics", func(r chi.Router) {
+		r.Get("/", handlers.TopicHandler.ListTopics)
+		r.Post("/", handlers.TopicHandler.CreateTopic)
+		r.Get("/{id}", handlers.TopicHandler.GetTopic)
+		r.Put("/{id}", handlers.TopicHandler.UpdateTopic)
+		r.Delete("/{id}", handlers.TopicHandler.DeleteTopic)
+		r.Get("/subject/{subject_id}", handlers.TopicHandler.ListTopicsBySubject)
 	})
 
-	r.Route("/alternativas", func(r chi.Router) {
-		r.Get("/", handlers.AlternativaHandler.ListAlternativasByQuestion)
-		r.Post("/", handlers.AlternativaHandler.CreateAlternativa)
-		r.Get("/{id}", handlers.AlternativaHandler.GetAlternativa)
-		r.Put("/{id}", handlers.AlternativaHandler.UpdateAlternativa)
-		r.Delete("/{id}", handlers.AlternativaHandler.DeleteAlternativa)
+	r.Route("/choices", func(r chi.Router) {
+		r.Get("/", handlers.ChoiceHandler.ListChoicesByQuestion)
+		r.Post("/", handlers.ChoiceHandler.CreateChoice)
+		r.Get("/{id}", handlers.ChoiceHandler.GetChoice)
+		r.Put("/{id}", handlers.ChoiceHandler.UpdateChoice)
+		r.Delete("/{id}", handlers.ChoiceHandler.DeleteChoice)
 	})
 
 	r.Route("/questions", func(r chi.Router) {
@@ -63,8 +63,8 @@ func NewRouter(handlers *RouterHandlers) http.Handler {
 		r.Delete("/{id}", handlers.QuestionHandler.DeleteQuestion)
 	})
 
-	r.Route("/provas", func(r chi.Router) {
-		r.Post("/", handlers.ProvaHandler.GenerateProva)
+	r.Route("/exams", func(r chi.Router) {
+		r.Post("/", handlers.ExamHandler.GenerateExam)
 	})
 
 	// slog all routes with a for loop

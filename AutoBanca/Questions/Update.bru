@@ -1,0 +1,29 @@
+meta {
+  name: Update
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/questions/{{question_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "statement": "Updated statement",
+    "year": 2024,
+    "topic_id": "{{topic_id}}",
+    "position": "Updated Position",
+    "level": "Updated Level",
+    "difficulty": "medium",
+    "modality": "multiple_choice",
+    "practice_area": "Updated Practice Area",
+    "field_of_study": "Updated Field"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

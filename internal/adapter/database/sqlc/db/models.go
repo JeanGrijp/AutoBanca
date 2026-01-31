@@ -8,35 +8,34 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Alternativa struct {
-	ID               pgtype.UUID `json:"id"`
-	QuestionID       pgtype.UUID `json:"question_id"`
-	TextoAlternativa string      `json:"texto_alternativa"`
-	Correta          pgtype.Bool `json:"correta"`
-}
-
-type Assunto struct {
-	ID           pgtype.UUID `json:"id"`
-	DisciplinaID pgtype.UUID `json:"disciplina_id"`
-	Nome         string      `json:"nome"`
-}
-
-type Disciplina struct {
-	ID   pgtype.UUID `json:"id"`
-	Nome string      `json:"nome"`
+type Choice struct {
+	ID         pgtype.UUID `json:"id"`
+	QuestionID pgtype.UUID `json:"question_id"`
+	ChoiceText string      `json:"choice_text"`
+	IsCorrect  pgtype.Bool `json:"is_correct"`
 }
 
 type Question struct {
 	ID           pgtype.UUID        `json:"id"`
-	Enunciado    string             `json:"enunciado"`
-	Ano          int32              `json:"ano"`
-	AssuntoID    pgtype.UUID        `json:"assunto_id"`
-	Instituicao  pgtype.Text        `json:"instituicao"`
-	Cargo        pgtype.Text        `json:"cargo"`
-	Nivel        pgtype.Text        `json:"nivel"`
-	Dificuldade  pgtype.Text        `json:"dificuldade"`
-	Modalidade   pgtype.Text        `json:"modalidade"`
-	AreaAtuacao  pgtype.Text        `json:"area_atuacao"`
-	AreaFormacao pgtype.Text        `json:"area_formacao"`
+	Statement    string             `json:"statement"`
+	Year         int32              `json:"year"`
+	TopicID      pgtype.UUID        `json:"topic_id"`
+	Position     pgtype.Text        `json:"position"`
+	Level        pgtype.Text        `json:"level"`
+	Difficulty   pgtype.Text        `json:"difficulty"`
+	Modality     pgtype.Text        `json:"modality"`
+	PracticeArea pgtype.Text        `json:"practice_area"`
+	FieldOfStudy pgtype.Text        `json:"field_of_study"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type Subject struct {
+	ID   pgtype.UUID `json:"id"`
+	Name string      `json:"name"`
+}
+
+type Topic struct {
+	ID        pgtype.UUID `json:"id"`
+	SubjectID pgtype.UUID `json:"subject_id"`
+	Name      string      `json:"name"`
 }

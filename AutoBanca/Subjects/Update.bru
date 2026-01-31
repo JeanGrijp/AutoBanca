@@ -1,0 +1,26 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/subjects/{{subject_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Updated Subject Name"
+  }
+}
+
+vars:pre-request {
+  subject_id: c71e8ebc-486c-42e7-b451-4548e960a15f
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

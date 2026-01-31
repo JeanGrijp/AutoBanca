@@ -1,0 +1,31 @@
+meta {
+  name: Generate PDF
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/exams
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "subjects": [
+      {
+        "name": "Subject Name",
+        "question_count": 5
+      }
+    ],
+    "difficulty": "medium",
+    "modality": "multiple_choice",
+    "field_of_study": "law",
+    "question_count": 10
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

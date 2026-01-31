@@ -5,35 +5,35 @@
 	},
 	"item": [
 		{
-			"name": "Disciplinas",
+			"name": "Subjects",
 			"item": [
-				{ "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/disciplinas" } },
-				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/disciplinas", "body": { "mode": "json", "raw": "{\"nome\": \"Direito Constitucional\"}" } } },
-				{ "name": "Get by ID", "request": { "method": "GET", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}" } },
-				{ "name": "Update", "request": { "method": "PUT", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}", "body": { "mode": "json", "raw": "{\"nome\": \"Direito Administrativo\"}" } } },
-				{ "name": "Delete", "request": { "method": "DELETE", "url": "{{baseUrl}}/disciplinas/{{disciplina_id}}" } }
+				{ "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/subjects" } },
+				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/subjects", "body": { "mode": "json", "raw": "{\"name\": \"Constitutional Law\"}" } } },
+				{ "name": "Get by ID", "request": { "method": "GET", "url": "{{baseUrl}}/subjects/{{subject_id}}" } },
+				{ "name": "Update", "request": { "method": "PUT", "url": "{{baseUrl}}/subjects/{{subject_id}}", "body": { "mode": "json", "raw": "{\"name\": \"Administrative Law\"}" } } },
+				{ "name": "Delete", "request": { "method": "DELETE", "url": "{{baseUrl}}/subjects/{{subject_id}}" } }
 			]
 		},
 		{
-			"name": "Assuntos",
+			"name": "Topics",
 			"item": [
-				{ "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos" } },
-				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/assuntos", "body": { "mode": "json", "raw": "{\"nome\": \"Atos Administrativos\", \"disciplina_id\": \"{{disciplina_id}}\"}" } } },
-				{ "name": "List by Disciplina", "request": { "method": "GET", "url": "{{baseUrl}}/assuntos/disciplina/{{disciplina_id}}" } }
+				{ "name": "List All", "request": { "method": "GET", "url": "{{baseUrl}}/topics" } },
+				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/topics", "body": { "mode": "json", "raw": "{\"name\": \"Administrative Acts\", \"subject_id\": \"{{subject_id}}\"}" } } },
+				{ "name": "List by Subject", "request": { "method": "GET", "url": "{{baseUrl}}/topics/subject/{{subject_id}}" } }
 			]
 		},
 		{
 			"name": "Questions",
 			"item": [
-				{ "name": "List (Filters in Body)", "request": { "method": "GET", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "raw": "{\"instituicao\": \"FGV\"}" } } },
-				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "raw": "{\n  \"enunciado\": \"Questão exemplo\",\n  \"ano\": 2024,\n  \"assunto_id\": \"{{assunto_id}}\",\n  \"instituicao\": \"STF\",\n  \"cargo\": \"Juiz\",\n  \"nivel\": \"Superior\"\n}" } } },
+				{ "name": "List (Filters in Body)", "request": { "method": "GET", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "raw": "{\"institution\": \"FGV\"}" } } },
+				{ "name": "Create", "request": { "method": "POST", "url": "{{baseUrl}}/questions", "body": { "mode": "json", "raw": "{\n  \"statement\": \"Sample question\",\n  \"year\": 2024,\n  \"topic_id\": \"{{topic_id}}\",\n  \"institution\": \"STF\",\n  \"position\": \"Judge\",\n  \"level\": \"Senior\"\n}" } } },
 				{ "name": "Get (ID in Body)", "request": { "method": "GET", "url": "{{baseUrl}}/questions/{{question_id}}", "body": { "mode": "json", "raw": "{\"id\": \"{{question_id}}\"}" } } }
 			]
 		},
 		{
-			"name": "Provas",
+			"name": "Exams",
 			"item": [
-				{ "name": "Generate PDF", "request": { "method": "POST", "url": "{{baseUrl}}/provas", "body": { "mode": "json", "raw": "{\"assunto_id\": \"{{assunto_id}}\", \"cargo\": \"Analista\"}" } } }
+				{ "name": "Generate PDF", "request": { "method": "POST", "url": "{{baseUrl}}/exams", "body": { "mode": "json", "raw": "{\"topic_id\": \"{{topic_id}}\", \"position\": \"Analyst\"}" } } }
 			]
 		}
 	]

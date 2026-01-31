@@ -16,6 +16,11 @@ build:
 	@cd cmd/api && go build -o ../../autobanca main.go
 	@echo "Build complete: ./autobanca"
 
+build-app:
+	@echo "Building AutoBanca application..."
+	@docker-compose build autobanca_app
+	@echo "Build complete."
+
 run:
 	@echo "Starting AutoBanca..."
 	@./autobanca
@@ -44,7 +49,7 @@ docker-watch:
 	@echo "Waiting for database to be ready..."
 	@sleep 3
 	@echo "Building the application..."
-	@make build
+	@make build-app
 	@echo "All systems ready! Run 'make run' in another terminal to start the app"
 	@echo "Watching the containers. Press Ctrl+C to stop."
 	@make docker-logs
@@ -52,5 +57,6 @@ docker-watch:
 db-init:
 	@echo "Initializing database schema..."
 	@docker-compose up -d autobanca_db
-	@sleep 5
-	@cat ./internal/adapter/database/sqlc/schema/schema.sql | docker-compose exec -T autobanca_db psql -U autobanca_user -d autobanca_db
+	@echo "Waiting for database to be ready..."
+	@until docker-compose exec autobanca_db pg_isready -U autobanca_user; do sleep 1; done
+	@docker-compose exec -T autobanca_db psql -U autobanca_user -d autobanca_db -f - < ./internal/adapter/database/sqlc/schema/schema.sql

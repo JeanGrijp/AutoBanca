@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -16,27 +17,28 @@ import (
 )
 
 type QuestionHandler struct {
-	svc *service.QuestionService
+	svc  *service.QuestionService
+	csvc *service.ChoiceService
+	isvc *service.ImportService
 }
 
-func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
-	return &QuestionHandler{svc: svc}
+func NewQuestionHandler(svc *service.QuestionService, csvc *service.ChoiceService, isvc *service.ImportService) *QuestionHandler {
+	return &QuestionHandler{svc: svc, csvc: csvc, isvc: isvc}
 }
 
 func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	slog.InfoContext(r.Context(), "Question handler")
 
 	var body struct {
-		Enunciado    string      `json:"enunciado"`
-		Ano          int32       `json:"ano"`
-		AssuntoID    pgtype.UUID `json:"assunto_id"`
-		Instituicao  pgtype.Text `json:"instituicao"`
-		Cargo        pgtype.Text `json:"cargo"`
-		Nivel        pgtype.Text `json:"nivel"`
-		Dificuldade  pgtype.Text `json:"dificuldade"`
-		Modalidade   pgtype.Text `json:"modalidade"`
-		AreaAtuacao  pgtype.Text `json:"area_atuacao"`
-		AreaFormacao pgtype.Text `json:"area_formacao"`
+		Statement    string      `json:"statement"`
+		Year         int32       `json:"year"`
+		TopicID      pgtype.UUID `json:"topic_id"`
+		Position     pgtype.Text `json:"position"`
+		Level        pgtype.Text `json:"level"`
+		Difficulty   pgtype.Text `json:"difficulty"`
+		Modality     pgtype.Text `json:"modality"`
+		PracticeArea pgtype.Text `json:"practice_area"`
+		FieldOfStudy pgtype.Text `json:"field_of_study"`
 	}
 
 	slog.InfoContext(r.Context(), "Decoding request body")
@@ -47,16 +49,15 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 	}
 
 	question, err := h.svc.CreateQuestion(r.Context(), db.Question{
-		Enunciado:    body.Enunciado,
-		Ano:          body.Ano,
-		AssuntoID:    body.AssuntoID,
-		Instituicao:  body.Instituicao,
-		Cargo:        body.Cargo,
-		Nivel:        body.Nivel,
-		Dificuldade:  body.Dificuldade,
-		Modalidade:   body.Modalidade,
-		AreaAtuacao:  body.AreaAtuacao,
-		AreaFormacao: body.AreaFormacao,
+		Statement:    body.Statement,
+		Year:         body.Year,
+		TopicID:      body.TopicID,
+		Position:     body.Position,
+		Level:        body.Level,
+		Difficulty:   body.Difficulty,
+		Modality:     body.Modality,
+		PracticeArea: body.PracticeArea,
+		FieldOfStudy: body.FieldOfStudy,
 	})
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Error creating question", "error", err)
@@ -80,6 +81,7 @@ type importError struct {
 type importResponse struct {
 	Total      int           `json:"total"`
 	Criadas    int           `json:"criadas"`
+	Ignoradas  int           `json:"ignoradas"`
 	Falharam   int           `json:"falharam"`
 	Detalhes   []importError `json:"detalhes"`
 	ColunasCSV []string      `json:"colunas_csv"`
@@ -103,7 +105,13 @@ func (h *QuestionHandler) ImportQuestionsCSV(w http.ResponseWriter, r *http.Requ
 	reader := csv.NewReader(file)
 	reader.TrimLeadingSpace = true
 
-	expectedHeaders := []string{"enunciado", "ano", "assunto_id", "instituicao", "cargo", "nivel", "dificuldade", "modalidade", "area_atuacao", "area_formacao"}
+	// Novo formato com 6 colunas extras para as alternativas
+	// choice_a, choice_b, choice_c, choice_d, choice_e, correct_choice (A-E)
+	expectedHeaders := []string{
+		"statement", "year", "topic_id", "position", "level", "difficulty",
+		"modality", "practice_area", "field_of_study",
+		"choice_a", "choice_b", "choice_c", "choice_d", "choice_e", "correct_choice",
+	}
 
 	resp := importResponse{ColunasCSV: expectedHeaders}
 	line := 0
@@ -139,54 +147,93 @@ func (h *QuestionHandler) ImportQuestionsCSV(w http.ResponseWriter, r *http.Requ
 			resp.Falharam++
 			resp.Detalhes = append(resp.Detalhes, importError{
 				Linha:   line,
-				Erros:   []string{"quantidade de colunas inválida"},
+				Erros:   []string{"quantidade de colunas inválida (esperado: 15)"},
 				Valores: row,
 			})
 		} else {
 			resp.Total++
 			erros := []string{}
 
-			enunciado := strings.TrimSpace(row[0])
-			anoStr := strings.TrimSpace(row[1])
-			assuntoIDStr := strings.TrimSpace(row[2])
-			instituicao := strings.TrimSpace(row[3])
-			cargo := strings.TrimSpace(row[4])
-			nivel := strings.TrimSpace(row[5])
-			dificuldade := strings.TrimSpace(row[6])
-			modalidade := strings.TrimSpace(row[7])
-			areaAtuacao := strings.TrimSpace(row[8])
-			areaFormacao := strings.TrimSpace(row[9])
+			statement := strings.TrimSpace(row[0])
+			yearStr := strings.TrimSpace(row[1])
+			topicIDStr := strings.TrimSpace(row[2])
+			position := strings.TrimSpace(row[3])
+			level := strings.TrimSpace(row[4])
+			difficulty := strings.TrimSpace(row[5])
+			modality := strings.TrimSpace(row[6])
+			practiceArea := strings.TrimSpace(row[7])
+			fieldOfStudy := strings.TrimSpace(row[8])
 
-			if enunciado == "" || anoStr == "" || assuntoIDStr == "" || instituicao == "" || cargo == "" || nivel == "" || dificuldade == "" || modalidade == "" || areaAtuacao == "" || areaFormacao == "" {
-				erros = append(erros, "todos os campos são obrigatórios")
+			// Novas colunas para alternativas
+			choiceA := strings.TrimSpace(row[9])
+			choiceB := strings.TrimSpace(row[10])
+			choiceC := strings.TrimSpace(row[11])
+			choiceD := strings.TrimSpace(row[12])
+			choiceE := strings.TrimSpace(row[13])
+			correctChoice := strings.ToUpper(strings.TrimSpace(row[14]))
+
+			// Valida campos obrigatórios da questão
+			if statement == "" || yearStr == "" || topicIDStr == "" || position == "" || level == "" || difficulty == "" || modality == "" || practiceArea == "" || fieldOfStudy == "" {
+				erros = append(erros, "todos os campos da questão são obrigatórios")
 			}
 
-			ano64, err := strconv.ParseInt(anoStr, 10, 32)
+			// Valida alternativas
+			if choiceA == "" || choiceB == "" || choiceC == "" || choiceD == "" || choiceE == "" {
+				erros = append(erros, "todas as 5 alternativas (A-E) são obrigatórias")
+			}
+
+			// Valida correct_choice
+			if correctChoice != "A" && correctChoice != "B" && correctChoice != "C" && correctChoice != "D" && correctChoice != "E" {
+				erros = append(erros, "correct_choice deve ser A, B, C, D ou E")
+			}
+
+			year64, err := strconv.ParseInt(yearStr, 10, 32)
 			if err != nil {
-				erros = append(erros, "ano inválido")
+				erros = append(erros, "year inválido")
 			}
 
-			assuntoID := pgtype.UUID{}
-			if err := assuntoID.Scan(assuntoIDStr); err != nil {
-				erros = append(erros, "assunto_id inválido")
+			topicID := pgtype.UUID{}
+			if err := topicID.Scan(topicIDStr); err != nil {
+				erros = append(erros, "topic_id inválido")
 			}
 
 			if len(erros) == 0 {
 				question := db.Question{
-					Enunciado:    enunciado,
-					Ano:          int32(ano64),
-					AssuntoID:    assuntoID,
-					Instituicao:  pgtype.Text{String: instituicao, Valid: true},
-					Cargo:        pgtype.Text{String: cargo, Valid: true},
-					Nivel:        pgtype.Text{String: nivel, Valid: true},
-					Dificuldade:  pgtype.Text{String: dificuldade, Valid: true},
-					Modalidade:   pgtype.Text{String: modalidade, Valid: true},
-					AreaAtuacao:  pgtype.Text{String: areaAtuacao, Valid: true},
-					AreaFormacao: pgtype.Text{String: areaFormacao, Valid: true},
+					Statement:    statement,
+					Year:         int32(year64),
+					TopicID:      topicID,
+					Position:     pgtype.Text{String: position, Valid: true},
+					Level:        pgtype.Text{String: level, Valid: true},
+					Difficulty:   pgtype.Text{String: difficulty, Valid: true},
+					Modality:     pgtype.Text{String: modality, Valid: true},
+					PracticeArea: pgtype.Text{String: practiceArea, Valid: true},
+					FieldOfStudy: pgtype.Text{String: fieldOfStudy, Valid: true},
 				}
 
-				if _, err := h.svc.CreateQuestion(r.Context(), question); err != nil {
-					erros = append(erros, err.Error())
+				// Monta as choices com o indicador de qual é correta
+				choices := []service.ChoiceInput{
+					{Text: choiceA, IsCorrect: correctChoice == "A"},
+					{Text: choiceB, IsCorrect: correctChoice == "B"},
+					{Text: choiceC, IsCorrect: correctChoice == "C"},
+					{Text: choiceD, IsCorrect: correctChoice == "D"},
+					{Text: choiceE, IsCorrect: correctChoice == "E"},
+				}
+
+				// Usa o ImportService com transação para criar questão + alternativas atomicamente
+				input := service.QuestionWithChoicesInput{
+					Question: question,
+					Choices:  choices,
+				}
+				_, _, createErr := h.isvc.CreateQuestionWithChoices(r.Context(), input)
+				if createErr != nil {
+					// Verifica se é erro de duplicidade
+					if errors.Is(createErr, service.ErrQuestionAlreadyExists) {
+						resp.Ignoradas++
+					} else {
+						erros = append(erros, createErr.Error())
+					}
+				} else {
+					resp.Criadas++
 				}
 			}
 
@@ -197,8 +244,6 @@ func (h *QuestionHandler) ImportQuestionsCSV(w http.ResponseWriter, r *http.Requ
 					Erros:   erros,
 					Valores: row,
 				})
-			} else {
-				resp.Criadas++
 			}
 		}
 
@@ -238,31 +283,32 @@ func (h *QuestionHandler) ListQuestionsByFilters(w http.ResponseWriter, r *http.
 	slog.InfoContext(r.Context(), "Listing questions by filters")
 
 	var body struct {
-		AssuntoID    *pgtype.UUID `json:"assunto_id"`
-		Instituicao  *pgtype.Text `json:"instituicao"`
-		Cargo        *pgtype.Text `json:"cargo"`
-		Nivel        *pgtype.Text `json:"nivel"`
-		Dificuldade  *pgtype.Text `json:"dificuldade"`
-		Modalidade   *pgtype.Text `json:"modalidade"`
-		AreaAtuacao  *pgtype.Text `json:"area_atuacao"`
-		AreaFormacao *pgtype.Text `json:"area_formacao"`
+		TopicID      *pgtype.UUID `json:"topic_id"`
+		Position     *pgtype.Text `json:"position"`
+		Level        *pgtype.Text `json:"level"`
+		Difficulty   *pgtype.Text `json:"difficulty"`
+		Modality     *pgtype.Text `json:"modality"`
+		PracticeArea *pgtype.Text `json:"practice_area"`
+		FieldOfStudy *pgtype.Text `json:"field_of_study"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		slog.ErrorContext(r.Context(), "Error decoding request body", "error", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	// Try to decode body, but allow empty body (list all questions)
+	if r.Body != nil && r.ContentLength > 0 {
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil && err.Error() != "EOF" {
+			slog.ErrorContext(r.Context(), "Error decoding request body", "error", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	filters := service.QuestionFilter{
-		AssuntoID:    body.AssuntoID,
-		Instituicao:  body.Instituicao,
-		Cargo:        body.Cargo,
-		Nivel:        body.Nivel,
-		Dificuldade:  body.Dificuldade,
-		Modalidade:   body.Modalidade,
-		AreaAtuacao:  body.AreaAtuacao,
-		AreaFormacao: body.AreaFormacao,
+		TopicID:      body.TopicID,
+		Position:     body.Position,
+		Level:        body.Level,
+		Difficulty:   body.Difficulty,
+		Modality:     body.Modality,
+		PracticeArea: body.PracticeArea,
+		FieldOfStudy: body.FieldOfStudy,
 	}
 
 	questions, err := h.svc.ListQuestionsByFilters(r.Context(), filters)
@@ -272,10 +318,29 @@ func (h *QuestionHandler) ListQuestionsByFilters(w http.ResponseWriter, r *http.
 		return
 	}
 
-	slog.InfoContext(r.Context(), "Questions listed successfully", "count", len(questions))
+	type questionWithChoices struct {
+		Question db.Question `json:"question"`
+		Choices  []db.Choice `json:"choices"`
+	}
+
+	questionsWithChoices := make([]questionWithChoices, 0, len(questions))
+	for _, q := range questions {
+		choices, err := h.csvc.ListChoicesByQuestion(r.Context(), q.ID)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "Error listing choices for question", "question_id", q.ID, "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		questionsWithChoices = append(questionsWithChoices, questionWithChoices{
+			Question: q,
+			Choices:  choices,
+		})
+	}
+
+	slog.InfoContext(r.Context(), "Questions listed successfully", "count", len(questionsWithChoices))
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(questions)
+	json.NewEncoder(w).Encode(questionsWithChoices)
 
 }
 
@@ -307,16 +372,15 @@ func (h *QuestionHandler) UpdateQuestion(w http.ResponseWriter, r *http.Request)
 
 	var body struct {
 		ID           pgtype.UUID `json:"id"`
-		Enunciado    string      `json:"enunciado"`
-		Ano          int32       `json:"ano"`
-		AssuntoID    pgtype.UUID `json:"assunto_id"`
-		Instituicao  pgtype.Text `json:"instituicao"`
-		Cargo        pgtype.Text `json:"cargo"`
-		Nivel        pgtype.Text `json:"nivel"`
-		Dificuldade  pgtype.Text `json:"dificuldade"`
-		Modalidade   pgtype.Text `json:"modalidade"`
-		AreaAtuacao  pgtype.Text `json:"area_atuacao"`
-		AreaFormacao pgtype.Text `json:"area_formacao"`
+		Statement    string      `json:"statement"`
+		Year         int32       `json:"year"`
+		TopicID      pgtype.UUID `json:"topic_id"`
+		Position     pgtype.Text `json:"position"`
+		Level        pgtype.Text `json:"level"`
+		Difficulty   pgtype.Text `json:"difficulty"`
+		Modality     pgtype.Text `json:"modality"`
+		PracticeArea pgtype.Text `json:"practice_area"`
+		FieldOfStudy pgtype.Text `json:"field_of_study"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -327,16 +391,15 @@ func (h *QuestionHandler) UpdateQuestion(w http.ResponseWriter, r *http.Request)
 
 	question, err := h.svc.UpdateQuestion(r.Context(), db.Question{
 		ID:           body.ID,
-		Enunciado:    body.Enunciado,
-		Ano:          body.Ano,
-		AssuntoID:    body.AssuntoID,
-		Instituicao:  body.Instituicao,
-		Cargo:        body.Cargo,
-		Nivel:        body.Nivel,
-		Dificuldade:  body.Dificuldade,
-		Modalidade:   body.Modalidade,
-		AreaAtuacao:  body.AreaAtuacao,
-		AreaFormacao: body.AreaFormacao,
+		Statement:    body.Statement,
+		Year:         body.Year,
+		TopicID:      body.TopicID,
+		Position:     body.Position,
+		Level:        body.Level,
+		Difficulty:   body.Difficulty,
+		Modality:     body.Modality,
+		PracticeArea: body.PracticeArea,
+		FieldOfStudy: body.FieldOfStudy,
 	})
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Error updating question", "error", err)

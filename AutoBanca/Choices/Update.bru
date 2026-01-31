@@ -1,0 +1,23 @@
+meta {
+  name: Update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/choices/{{choice_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question_id": "{{question_id}}",
+    "choice_text": "Alternativa A - Updated",
+    "is_correct": false
+  }
+}
+
+settings {
+  encodeUrl: true
+}
