@@ -4,7 +4,13 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- 1. Subjects table
 CREATE TABLE subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-    name VARCHAR(100) NOT NULL UNIQUE
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. Topics table (related to subjects)
@@ -12,7 +18,14 @@ CREATE TABLE topics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
     subject_id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
-    CONSTRAINT fk_subject FOREIGN KEY (subject_id) REFERENCES subjects (id) ON DELETE CASCADE
+    CONSTRAINT fk_subject FOREIGN KEY (subject_id) REFERENCES subjects (id) ON DELETE CASCADE,
+    UNIQUE (subject_id, name),
+    created_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. Questions table
@@ -30,6 +43,9 @@ CREATE TABLE questions (
     created_at TIMESTAMP
     WITH
         TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_topic FOREIGN KEY (topic_id) REFERENCES topics (id)
 );
 
@@ -39,7 +55,13 @@ CREATE TABLE choices (
     question_id UUID NOT NULL,
     choice_text TEXT NOT NULL,
     is_correct BOOLEAN DEFAULT FALSE,
-    CONSTRAINT fk_question FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
+    created_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_question FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
 );
 
 -- Índices para acelerar a geração automática de provas (filtros comuns)
